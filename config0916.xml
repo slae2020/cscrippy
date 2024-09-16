@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bk-script_options
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xsd">
+
+	<general>
+		<space> </space>
+		<version1 date="2024-09-08">1.6beta</version1>
+		<version2> Anpassung offi</version2>
+		<lang>de-DE</lang>
+
+		<dialog_title>Starter BK</dialog_title>
+		<dialog_menue>Meld-Vergleich auswählen (v$version1$version2)</dialog_menue>
+		<dialog_config>Einstellungen</dialog_config>
+		<dialog_column1>Optionen</dialog_column1>
+
+		<editor_prog>gedit</editor_prog>
+		<std_prog>meld</std_prog>
+		<name_stdprg>Just meld</name_stdprg>
+	</general>
+	
+	<directories>
+		<home_dir></home_dir>
+		<std_dir>/slae_kim</std_dir>
+		<usb_dir>/media/stefan</usb_dir>
+		<remote_dir>/mnt/iserv_laettig/Files</remote_dir>
+	</directories>
+
+	<vergleiche>
+<!--
+		id immer integer
+		keine Lücken in name & id
+		immer $empty minimum für nix/leer 
+-->
+		<ordpaar>
+		<id>00</id>
+		<name>SLAE01</name>
+		<dir1>~$std_dir</dir1>
+		<dir2>$usb_dir/SLAE01/slaekim</dir2>
+		</ordpaar>
+
+		<ordpaar>
+		<id>01</id>
+		<name>iserv$spaceUSR</name>
+		<dir1>~$std_dir/usr</dir1>
+		<dir2>$remote_dir/usr</dir2>
+		</ordpaar>
+		
+		<ordpaar>
+		<id>02</id>
+		<name>iserv$spaceunt</name>
+		<dir1>~/slae_unt</dir1>
+		<dir2>$remote_dir/unt</dir2>
+		</ordpaar>
+		
+		<ordpaar>
+		<id>03</id>
+		<name>iserv$spaceAusdruck</name>
+		<dir1>~$std_dir/ausdruck</dir1>
+		<dir2>$remote_dir/ausdruck</dir2>
+		</ordpaar>
+		
+		<ordpaar>
+		<id>04</id>
+		<name>Shuffle$spacenach$spaceunten</name>
+		<dir1>~$std_dir/abf</dir1>
+		<dir2>~/slae_unt</dir2>
+		</ordpaar>
+
+		<ordpaar>
+		<id>05</id>
+		<name>SLAE03</name>
+		<dir1>~$std_dir</dir1>
+		<dir2>$usb_dir/SLAE03/slaekim</dir2>
+		</ordpaar>
+		<ordpaar>
+
+		<id>06</id>
+		<name>Keepass</name>
+		<dir1>~/.door3</dir1>
+		<dir2>$remote_dir/kp/myt</dir2>
+		</ordpaar>
+
+		<ordpaar>
+		<id>08</id>
+		<name>Literatur:-->SLAE01/slae_lit</name>
+		<dir1>~$std_dir/.lit   </dir1>
+		<dir2>$usb_dir/SLAE01/slae_lit</dir2>
+		</ordpaar>
+		
+		<ordpaar>
+		<id>09</id>
+		<name>Medien:-->SLAE01/slae_media</name>
+		<dir1>~$std_dir/.media</dir1>
+		<dir2>$usb_dir/SLAE01/slae_media</dir2>
+		</ordpaar>
+
+		<ordpaar>
+		<id>15</id>
+		<name>BK$spacedokumente</name>
+		<dir1>~/dokumente</dir1>
+		<dir2>/mnt/NAS_francois/dokumente</dir2>
+		</ordpaar>
+
+	</vergleiche>
+
+</bk-script_options>
+<!-- Ende des XML-Dokumentes -->
+
