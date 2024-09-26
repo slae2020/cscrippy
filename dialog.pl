@@ -3,14 +3,19 @@ use strict;
 
 use constant VERSION => "0.1"; # 2024.09.16
 
+use Scalar::Util qw(looks_like_number);
+
 my $is_test_mode = 0; # kw ???
-# For returning string while aborting message
+# for returning string while aborting message
 my $is_cancel="#x0020";
+# standard titles
+my @messenger_text = ("Title-Text", "textline");
 
 use lib "/home/stefan/perl5/lib/perl5/";  # ???
 use UI::Dialog::Backend::Zenity;
 my $d = UI::Dialog::Backend::Zenity->new 
-	  ( title => 'Default' ,
+	  ( title => $messenger_text[0],
+		text =>  $messenger_text[1],
 		height => 16, width => 65,
 		listheight => 5,
 		debug => 1*0,
@@ -18,14 +23,16 @@ my $d = UI::Dialog::Backend::Zenity->new
 	  );
 
 # Dialog-Variable
-my %dialog_var=(
-	titles => [undef, undef],
-	colli  => [undef, undef, undef ],
-	id     => [undef],
-	list   => [undef, [ undef , undef ] ]
-); 
+my %dialog_var;
+my @dialo = qw (titles colli id list); # ???
+#=(
+	#titles => [undef, undef],
+	#colli  => [undef, undef, undef ],
+	#id     => [undef],
+	##list   => [undef, [ undef , undef ] ]
+	#list    => ['', [ '' , '' ] ],
+#); 
 
-my $messenger_top_text = "Top Text";
 
 
 my $dialog_height;
@@ -42,6 +49,9 @@ sub resetdisplay {
 	$dialog_width = 240;   #250
 }
 
+sub set_messenger_text {
+	@messenger_text = @_;
+}
 
 printf "------------ %s (V%s)------------\n",$0,VERSION;
 
@@ -53,7 +63,7 @@ sub message_exit {
 	
 	#my $d = new UI::Dialog::Backend::Zenity ( title => 'Default' );
 	if ($err > 0) {
-		$d->error( title => $messenger_top_text, text => "$txt ($err)" , width => $dialog_width );
+		$d->error( title => $messenger_text[0], text => "$txt ($err)" , width => $dialog_width );
 	};
 	exit $err;
 }
@@ -61,11 +71,11 @@ sub message_exit {
 # Notification-window with timout after $2 sec or click
 sub message_notification {
 	my ($txt, $time) = @_; # ??? time nicht berücksichtigt
-	
-	my $d = new UI::Dialog::Backend::Zenity ( title => 'Default' );
+printf $time."\n";
+	#my $d = new UI::Dialog::Backend::Zenity ( title => 'Default' );
 	if ($time > 0 ) {
-		$is_test_mode ? printf "(t)\n $messenger_top_text\n$txt"  
-					  : $d->infobox( text => $messenger_top_text."\n".$txt, timeout => $time, height => $dialog_height, width => $dialog_width );
+		$is_test_mode ? printf "(t)\n $messenger_text[0]\n$txt"  
+					  : $d->infobox( title => $messenger_text[0], text => $messenger_text[1]."\n".$txt, timeout => $time, height => $dialog_height, width => $dialog_width );
 	};
 }
 
@@ -73,7 +83,7 @@ sub message_notification {
 sub message_test_exit {
 	my ($result, $txt, $err) = @_; #
 	if ($result != 0 ) {
-		$is_test_mode ? printf "(t)\n $messenger_top_text\n$txt \"$result?\" $err"
+		$is_test_mode ? printf "(t)\n $messenger_text[0]\n$txt \"$result?\" $err"
 					  : message_exit ("$txt \’$result?\'", $err);
 	};
 }
@@ -83,8 +93,8 @@ sub ask_to_continue {
 	my ($txt, $err) = @_; #
     $txt =~ s|: |:\n|g;
     $err = -1 unless defined $err;
-	my $d = new UI::Dialog::Backend::Zenity ( title => 'Default' );
-	if (! $d->question( title => $messenger_top_text, text => "$txt ($err)" , height => $dialog_height, width => $dialog_width ) ) {
+	#my $d = new UI::Dialog::Backend::Zenity ( title => 'Default' );
+	if (! $d->question( title => $messenger_text[0], text => "$txt ($err)" , height => $dialog_height, width => $dialog_width ) ) {
 		exit $err;
 	}
     return 0;
@@ -121,49 +131,78 @@ sub ask_to_choose {
 
 ###
 
+
+
 resetdisplay;
 setdisplay (500, 500);
-
-
-
-#my @col22=("K11","k22","KK3");
 
 sub set_dialog_item {
 	return @_;
 };
 
-sub append_dialog_item {
-	my @d=@_;
-	push @d, '02', ['Watt anders toll', '1'];
+@{$dialog_var{titles}} = set_dialog_item ('Program DoIt', 'Choose your items');
+@{$dialog_var{colli}} = set_dialog_item ( '[@]', 'Id', 'Item');
 
+sub new_list_item {
+	my ($a,$b,$c) = @_;
+	my @d;
+	
+	# $b max length ==5
+	if (length $b > 5) {die "length(list-id):$b >5"};
+	# $a muss int sein sonst 0
+	if (! looks_like_number ($a) ) { $a=0 };
+
+	# order following to UI::Dialog
+	push @d, $b, [ $c , $a ];
 	return @d;
 };
 
-push @{$dialog_var{titles}}, 'Oben', 'unten', 'daneben';
+push @{$dialog_var{list}}, new_list_item (1,'01','first choice');
+push @{$dialog_var{list}}, new_list_item (0,'02','secondbest');
 
-#pop @{$dialog_var{colli}};pop @{$dialog_var{colli}};pop @{$dialog_var{colli}};
-#push @{$dialog_var{colli}}, 'cc1', 'cc2', 'cc3', 'cc$$';
+#my @answer=ask_to_choose (%dialog_var);
+#printf ">%s<\n",$_ for @answer;
 
-@{$dialog_var{titles}} = set_dialog_item ('Oberhalb', 'Ünten', 'daneben');
-@{$dialog_var{colli}} = set_dialog_item ( 'cc1', 'cc2', 'c33', 'cc$$');
 
-@{$dialog_var{list}} = append_dialog_item ( 'ää', ['TTT', '0']) ;
-@{$dialog_var{list}} = append_dialog_item ( '22', ['TTT', '1']) ;
-
-#push @{$dialog_var{list}}, 'ää', ['TTT', '0'];
-#push @{$dialog_var{list}}, '01', ['Links für tolle', '0'];
-#push @{$dialog_var{list}}, '02', ['Watt anders toll', '1'];
-
-my @ja=ask_to_choose (%dialog_var);
-
-printf "weiter\n";
-printf ">%s<\n",$_ for @ja;
-
-printf "\n fertig \n";
+message_notification ("Reading list!",10);
+#message_notification (":done:", 0);
+#printf "\n :done: \n";
 __END__
+
+examples
+#
+resetdisplay;
+set_messenger_text ("New Title", "new line");
+
+#
+message_exit ("Unknown Error", 22);
+
+#
+message_notification (":done:", 0);
+message_notification ("Reading list!",10);
+
+#
+message_test_exit ( 3* 4, "Wrong result:", 33);
+
+#
+@{$dialog_var{titles}} = set_dialog_item ('Program DoIt', 'Choose your items');
+@{$dialog_var{colli}} = set_dialog_item ( '[@]', 'Id', 'Item');
+push @{$dialog_var{list}}, new_list_item (1,'01','first choice');
+push @{$dialog_var{list}}, new_list_item (0,'02','secondbest');
+
+my @answer=ask_to_choose (%dialog_var);
+
+my @answer=ask_to_choose (%dialog_var);
+printf ">%s<\n",$_ for @answer;
+
+printf "\n :done: \n";
+
+
+
+
 ab hier junk
 
-#message_exit ("Hier stop", 22);
+#
 
 my $tt=22-22;
 #message_test_exit (2*3, "Hier die Info", 25);
