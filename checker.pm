@@ -2,27 +2,33 @@
 use strict;
 use warnings;
 
-use Cwd qw(abs_path);
+use Cwd qw( abs_path );
 use File::Spec;
 use dialog;
 
 my $dir_usb = "media/"; # --> declarations???
 my $dir_mnt = "mnt/";
 
+#:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+#: Check and ensuring the existence and readabilty of
+#:     - path & dir
+#:     - file
+#:
+
 # Function to ensure if a path is readable
 sub ensure_path_readability {
     my ($path, $name) = @_;
 
-	my $formatted_path = $path // "   ";
+    my $formatted_path = $path // "   ";
     unless (-r $path) {
-		message_exit("Config-Error: Path\n'$formatted_path'\nis missing or not readable.", 21);        
+        message_exit("Config-Error: Path\n'$formatted_path'\nis missing or not readable.", 21);
     }
-    
+
     if (index($path, $dir_usb) >= 0) {
         ensure_usb_stick($path);
     } elsif (index($path, $dir_mnt) >= 0) {
         ensure_mount($path);
-    }   
+    }
 }
 
 # Function to check if a USB stick is present
@@ -35,11 +41,11 @@ sub ensure_usb_stick {
         if (-d $usb_stick_path) {
             return 1;
         } else {
-			ask_to_continue("'$usb_stick_name' is missing: ['$usb_stick_path' not found]\n\nDo you want to try again?", 22);
+            ask_to_continue("'$usb_stick_name' is missing: ['$usb_stick_path' not found]\n\nDo you want to try again?", 22);
             $attempt++;
         }
     }
-	message_exit ("Failed to find USB stick '$usb_stick_name' after $max_attempts attempts.\n", 22); 
+    message_exit ("Failed to find USB stick '$usb_stick_name' after $max_attempts attempts.\n", 22);
     return 0;
 }
 
@@ -80,10 +86,11 @@ sub ensure_file_existence {
         $file_name = File::Spec->catdir($file_dir, $file_name);
     }
 
-	ensure_path_readability ($file_name);
+    ensure_path_readability ($file_name);
     return $file_name;
 }
 
+#:::
 
 __END__
 
@@ -97,7 +104,7 @@ ensure_usb_stick "/media/stefan/SLAE01/slaekim", "SLAE01";
 
 ensure_mount "/mnt/iserv_laettig/Files";
 
-ensure_program_available ("meld");  
+ensure_program_available ("meld");
 
 my $answer;
 $answer = ensure_file_existence ("README.md");
