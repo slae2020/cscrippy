@@ -4,6 +4,7 @@ use warnings;
 
 use Cwd qw( abs_path );
 use File::Spec;
+use lib "/home/stefan/prog/bakki/cscrippy/";
 use dialog;
 
 my $dir_usb = "media/"; # --> declarations???
@@ -92,6 +93,11 @@ sub ensure_file_existence {
 
 #:::
 
+#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
+#push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
+printf " $VERSION ";
+
+message_exit ("Hääh", 33);
 __END__
 
 # Example usage:
