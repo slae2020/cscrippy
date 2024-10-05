@@ -1,22 +1,38 @@
-#!/usr/bin/perl -w
+package Uupm::Dialog;
+
 ####
 # license
 ###
 use 5.006;
 use strict;
 use warnings;
+use Exporter;
 use Scalar::Util qw(looks_like_number);
 use lib "/home/stefan/perl5/lib/perl5/";  # ???
 use UI::Dialog::Backend::Zenity;
 
 BEGIN {
-  use vars qw( $VERSION $is_test_mode $is_cancel);  
+  use vars qw( $VERSION $is_test_mode $is_cancel @ISA);  
   $VERSION = '0.11'; # 2024.09.30
   $is_test_mode = 1*0;
   $is_cancel="#x0020";
-}
-
-
+  our @ISA = qw ( Exporter );
+  our @EXPORT = qw ( 
+			$VERSION
+			$is_test_mode
+			$is_cancel
+			
+			set_dialog_item
+			add_list_item
+			message_exit
+			message_test_exit
+			message_notification
+			ask_to_continue
+			ask_to_choose
+			
+			our %_dialog_config
+		);
+};
 
 printf "------------ %s (V%s)------------\n",$0,$VERSION 
 	if $is_test_mode;
@@ -34,7 +50,7 @@ my %dialog_defaults = (
         window_size => [ '200', '350', ' ' ],
         not_defined => [ 'nil_1', 'nil_2', 'nil_3' ],
     );
-my %dialog_config = %dialog_defaults;
+our %_dialog_config = %dialog_defaults;
 
 # Declare zenity-window
 my $d = UI::Dialog::Backend::Zenity->new(
@@ -101,14 +117,14 @@ sub message_exit {
 
     if ($err > 0) {
         if ($is_test_mode) {
-            printf "(t) %s\n%s\nExciting program (%s).", $dialog_config{titles}[0], $txt, $err;
+            printf "(t) %s\n%s\nExciting program (%s).", $_dialog_config{titles}[0], $txt, $err;
         } else {
             eval {
                 $d->error(
-                    title   => $dialog_config{titles}[0],
+                    title   => $_dialog_config{titles}[0],
                     text    => "$txt\n\nExciting program ($err)." ,
-                    height  => $dialog_config{window_size}[0],
-                    width   => $dialog_config{window_size}[1]
+                    height  => $_dialog_config{window_size}[0],
+                    width   => $_dialog_config{window_size}[1]
                 );
             }
         };
@@ -127,7 +143,7 @@ sub message_test_exit {
 
     if ($test_result != 0 ) {
         if ($is_test_mode) {
-            die "(t) $dialog_config{titles}[0]\n$txt '$test_result' ($err)\n", $err;
+            die "(t) $_dialog_config{titles}[0]\n$txt '$test_result' ($err)\n", $err;
         } else {
             message_exit ("$txt '$test_result'", $err);
         }
@@ -143,15 +159,15 @@ printf "Time?-->".$timeout."\n";
 
     if ($timeout > 0 ) {
         if ($is_test_mode) {
-            printf "(t) %s\n%s", $dialog_config{titles}[0], $txt;
+            printf "(t) %s\n%s", $_dialog_config{titles}[0], $txt;
         } else {
             eval {
                 $d->infobox(
-                    title   => $dialog_config{titles}[0],
+                    title   => $_dialog_config{titles}[0],
                     text    => $txt,
                     timeout => $timeout,
-                    height  => $dialog_config{window_size}[0],
-                    width   => $dialog_config{window_size}[1]
+                    height  => $_dialog_config{window_size}[0],
+                    width   => $_dialog_config{window_size}[1]
                 );
             };
             if ($@) {
@@ -169,16 +185,16 @@ sub ask_to_continue {
     $err = -1 unless defined $err;
     $txt =~ s/: /:\n/g;
 
-	die "(t) $dialog_config{titles}[0]\n$txt ($err)\n", -1 
+	die "(t) $_dialog_config{titles}[0]\n$txt ($err)\n", -1 
 		if $is_test_mode;
     
     my $answer;
     eval {
 		$answer = $d->question(
-            title   => $dialog_config{titles}[0],
+            title   => $_dialog_config{titles}[0],
             text    => "$txt ($err)" ,
-            height  => $dialog_config{window_size}[0],
-            width   => $dialog_config{window_size}[1]
+            height  => $_dialog_config{window_size}[0],
+            width   => $_dialog_config{window_size}[1]
         );
     };
     if ($@) {
@@ -193,19 +209,19 @@ sub ask_to_continue {
 # first 3 strings for titles etc;
 # $is_cancel if no choose
 sub ask_to_choose {
-    die "Missing required keys in the hash" unless exists $dialog_config{columns} && exists $dialog_config{list};
+    die "Missing required keys in the hash" unless exists $_dialog_config{columns} && exists $_dialog_config{list};
 
     my @answer;
     eval {
         @answer = $d->checklist (
-                    title   => $dialog_config{titles}[0],
-                    text    => $dialog_config{titles}[1],
-                    height  => $dialog_config{window_size}[0],
-                    width   => $dialog_config{window_size}[1],
-                    column1 => $dialog_config{columns}[0],
-                    column2 => $dialog_config{columns}[1],
-                    column3 => $dialog_config{columns}[2],
-                    list    => $dialog_config{list}
+                    title   => $_dialog_config{titles}[0],
+                    text    => $_dialog_config{titles}[1],
+                    height  => $_dialog_config{window_size}[0],
+                    width   => $_dialog_config{window_size}[1],
+                    column1 => $_dialog_config{columns}[0],
+                    column2 => $_dialog_config{columns}[1],
+                    column3 => $_dialog_config{columns}[2],
+                    list    => $_dialog_config{list}
                   );
     };
     if ($@) {
@@ -224,8 +240,8 @@ sub ask_to_choose {
 
 ################
 
-#push @{$dialog_config{list}}, add_list_item (1,'01','first choice'); 
-#push @{$dialog_config{list}}, add_list_item (0,'02','secondbest');
+#push @{$_dialog_config{list}}, add_list_item (1,'01','first choice'); 
+#push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
 
 #my @answer=ask_to_choose (%dialog_config);
 #printf ">%s<\n",$_ for @answer;
@@ -233,7 +249,7 @@ sub ask_to_choose {
 #my $ansi=ask_to_continue("'usb_stick_name' is missing: ['usb_stick_path' not found]\n\nDo you want to try again?", 22);
 #printf "%s", $ansi;
 
-#@{$dialog_config{titles}} = set_dialog_item ('titles' , 'Program DoIt', 'Choose your items', '#');
+#@{$_dialog_config{titles}} = set_dialog_item ('titles' , 'Program DoIt', 'Choose your items', '#');
 
 __END__
 
@@ -257,12 +273,12 @@ my $ansi=ask_to_continue("'usb_stick_name' is missing: ['usb_stick_path' not fou
 printf "%s", $ansi;
 
 #
-@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
-@{$dialog_config{columns}} = set_dialog_item ( '[@]', 'Id', 'Item');
-#@{$dialog_config{schnulli}} = set_dialog_item ( 'fixie' ); # faulty
+@{$_dialog_config{titles}} = set_dialog_item ('titles','Program DoIt', 'Choose your items'); ??? austasuschen
+@{$_dialog_config{columns}} = set_dialog_item ('colums', '[@]', 'Id', 'Item');
+#@{$_dialog_config{schnulli}} = set_dialog_item ( 'fixie' ); # faulty
 
-push @{$dialog_config{list}}, add_list_item (1,'01','first choice');
-push @{$dialog_config{list}}, add_list_item (0,'02','secondbest');
+push @{$_dialog_config{list}}, add_list_item (1,'01','first choice');
+push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
 
 my @answer=ask_to_choose (%dialog_config);
 
@@ -271,10 +287,10 @@ printf ">%s<\n",$_ for @answer;
 
 #
 foreach my $key (keys %dialog_config) {
-    printf "$key is >". join ('/',@{ $dialog_config{$key} })."<\n";
+    printf "$key is >". join ('/',@{ $_dialog_config{$key} })."<\n";
 }
 printf "\nWindows h:%s/w:%s<", $dialog_defaults{window_size}[0],$dialog_defaults{window_size}[1];
-printf "\nWindows h:%s/w:%s<", $dialog_config{window_size}[0],$dialog_config{window_size}[1];
+printf "\nWindows h:%s/w:%s<", $_dialog_config{window_size}[0],$_dialog_config{window_size}[1];
 
 printf "\n :done: \n";
 

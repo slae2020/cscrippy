@@ -1,11 +1,17 @@
-#!/usr/bin/perl -w
+package Uupm::Checker;
+###### :::
 use strict;
 use warnings;
+use Exporter;
+our @ISA = qw (Exporter);
 
 use Cwd qw( abs_path );
 use File::Spec;
 use lib "/home/stefan/prog/bakki/cscrippy/";
-use dialog;
+use Uupm::Dialog;
+
+our @Export = qw ( ensure_file_existence );
+
 
 my $dir_usb = "media/"; # --> declarations???
 my $dir_mnt = "mnt/";
@@ -95,10 +101,55 @@ sub ensure_file_existence {
 
 #@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
 #push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
-printf " $VERSION ";
+#printf "$Uupm::Dialog::is_cancel<->$Uupm::Dialog::VERSION ";
 
-message_exit ("Hääh", 33);
+#message_exit ("Hääh", 33);
 __END__
+
+transfer ????
+sub check_variable {
+    my $var = shift;
+
+    # Check if the variable is defined
+    if (!defined $var) {
+        return "The variable is not defined.";
+    }
+
+    # Determine the type of the variable
+    my $type = ref($var);
+    
+    if ($type eq '') {
+        # The variable is a string (or a scalar)
+        return "The variable is a string.";
+    } 
+    elsif ($type eq 'ARRAY') {
+        # The variable is an array reference
+        return "The variable is an array.";
+    } 
+    elsif ($type eq 'HASH') {
+        # The variable is a hash reference
+        return "The variable is a hash.";
+    } 
+    else {
+        return "The variable is of type: $type.";
+    }
+}
+
+# Example usage
+my $string = "Hello, World!";
+my @array = (1, 2, 3);
+my %hash = (key1 => 'value1', key2 => 'value2');
+my $undefined;
+
+print check_variable($string), "\n";
+print check_variable(\@array), "\n"; # Pass array reference
+print check_variable(\%hash), "\n";  # Pass hash reference
+print check_variable($undefined), "\n";
+ ?????
+ 
+
+ensure_program_available ("meld");
+
 
 # Example usage:
 
