@@ -1,0 +1,185 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<office-starter_options
+xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xsd">
+
+	<general>
+		<version1 date="2024-10-06">1.7</version1>
+		<version2>; Now in perl-mode</version2>
+		<lang>de-DE</lang>
+	</general>
+
+	<dialog_cfg>
+		<dialog_title>Office Vorlagen Starter</dialog_title>
+		<dialog_menue>Vorlage auswählen (v$version1$version2):</dialog_menue>
+		<dialog_column_items>[?] #x0020 Vorlagen#x0020Titel</dialog_column_items>
+	</dialog_cfg>
+		
+	<directories>
+		<home_dir>irgendwas</home_dir>
+		<standard_dir>~/slae_kim/etc/vorlagen</standard_dir>
+		<storage_dir>/media/stefan</storage_dir>
+		<remote_dir></remote_dir>
+	</directories>
+
+	<list_cfg>
+		<list_head>vorlagen</list_head>
+		<list_label>eintrag</list_label>
+		<list_items>_name prog param template_path template_file</list_items>
+	
+		<list_prog_id>97</list_prog_id>
+		<list_prog_strg>Office (pur)</list_prog_strg>
+		<std_program>soffice</std_program>
+
+		<list_config_id>99</list_config_id>
+		<list_config_strg>Einstellungen</list_config_strg> 
+		<editor_program>gedit</editor_program>
+	</list_cfg>
+
+<vorlagen>
+<!--
+		id immer integer
+		keine Lücken in name & id
+		immer $empty minimum für nix/leer 
+-->
+		<eintrag id="00">
+			<_name>writer (leer)</_name>
+			<prog>$std_program \-\-writer</prog>
+			<param>$home_dir</param>
+			<template_path>$storage_dir</template_path>
+			<template_file>$home_dir</template_file>
+		</eintrag>
+
+		<eintrag id="01">
+		<id>01</id>
+			<_name>slae Brief</_name>
+			<prog>$std_program</prog>
+			<param>$empty</param>
+			<template_path>$standard_dir</template_path>
+			<template_file>~/LaeHomeBrief.ott</template_file>
+		</eintrag>
+		
+		<eintrag id="02">
+		<id>02</id>
+		<_name>AB>>Physik (Stand.)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ab_physik_K202008.ott</template_file> 
+		</eintrag>
+		
+		<eintrag  id="03">
+		<id>03</id>
+		<_name>AB>>Mathe (leer)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ab_matheL202010.ott</template_file> 
+		</eintrag>
+		
+		<eintrag id="22">
+		<id>22</id>
+		<_name>AB>>Physik (Stdquer?)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ab_physik_K202008.ott</template_file> 
+		</eintrag>
+		<eintrag id="23">
+		<id>23</id>
+		<_name>AB>>Physik (Paetec)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ab_physik_paetec201904.ott</template_file> 
+		</eintrag>
+		<eintrag id="24">
+		<id>24</id>
+		<_name>AB>>Physik (QUER 2Sp)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ab_physik_2Q202002.ott</template_file> 
+		</eintrag>
+		
+		<eintrag id="25">
+			<_name>AB>>Physik (QUER 3Sp)</_name>
+			<prog>$std_program</prog>
+			<param>$empty</param>
+			<template_path>$standard_dir/abf</template_path>
+			<template_file>/ab_physik_3Q202103.ott</template_file> 
+		</eintrag>
+		
+<!--
+		<eintrag>
+		<id>32</id>
+		<_name>AB>>Mathe (Karos)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ab_mathe201903.ott</template_file> 
+		</eintrag>
+		<eintrag>
+		<id>33</id>
+		<_name>AB>>Mathe (Klettco)</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/ue_mathe201903.ott</template_file> 
+		</eintrag>
+		
+		<eintrag>
+		<id>61</id>
+		<_name>LK Physik klass</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/lk_physik_OSpr_2311.ott</template_file> 
+		</eintrag>
+		<eintrag>
+		<id>62</id>
+		<_name>LK Physik mit SprachBewertung</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/lk_physik_Spr_2311.ott</template_file> 
+		</eintrag>
+		<eintrag>
+		<id>63</id>
+		<_name>LK Mathe</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/lk_ma_202303.ott</template_file> 
+		</eintrag>
+		<eintrag>
+		<id>08</id>
+		<_name>Abi mdl</_name>
+		<prog>$std_program</prog>
+		<param>$empty</param>
+		<template_path>$standard_dir/abf</template_path>
+		<template_file>/prf_abi_202206.ott</template_file> 
+		</eintrag>
+		<eintrag>
+		<id>10</id>
+		<_name>calc (leer)</_name>
+		<prog>$std_program \-\-calc</prog>
+		<param>$empty</param>
+		<template_path>$empty</template_path>
+		<template_file>$empty</template_file>
+		</eintrag>
+-->
+		
+		<eintrag id="98">
+			<_name>Alle Vorlagen ansehen</_name>
+			<prog>caja</prog>
+			<param>$empty</param>
+			<template_path>$standard_dir</template_path>
+			<template_file>$empty</template_file>
+		</eintrag>
+		
+	</vorlagen>
+
+</office-starter_options>
+<!-- Ende des XML-Dokumentes -->
+

@@ -1,5 +1,6 @@
 package Uupm::Checker;
 ###### :::
+use 5.010;
 use strict;
 use warnings;
 use Exporter;
@@ -78,7 +79,7 @@ sub ensure_mount {
 sub ensure_program_available {
     my ($prog_name) = @_;
 
-    if (system(qq{command -v "$prog_name" > /dev/null 2>&1}) != 0) {
+    if (system("command -v '$prog_name' > /dev/null 2>&1") != 0) {
         message_exit ("Config-Error: program '$prog_name' not found.\n", 24);
     }
 }
@@ -170,3 +171,25 @@ printf $answer;
 **Important Notes:**
 
 * **`ensure_mount`:** The script assumes the `mounter.sh` script is available at the specified location (`$ENV{HOME}/prog/bakki/mounti/mounter.sh`).
+
+__Extra__
+
+# Subroutine to sort an array and find double entries
+# ??? -> Checker.pm
+sub find_duplicate2 {
+    my @array = @_;
+
+    # Sort the array
+    #@array = sort { $a <=> $b } @array;
+
+    # Find duplicates
+    my %count;
+    my @duplicates;
+    foreach my $item (@array) {
+        $count{$item}++;
+        push @duplicates, $item if $count{$item} > 1;
+    }
+
+    # Return the list of duplicates
+    return @duplicates;
+}

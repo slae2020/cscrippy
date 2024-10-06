@@ -3,7 +3,7 @@ package Uupm::Dialog;
 ####
 # license
 ###
-use 5.006;
+use 5.010;
 use strict;
 use warnings;
 use Exporter;
@@ -12,15 +12,15 @@ use lib "/home/stefan/perl5/lib/perl5/";  # ???
 use UI::Dialog::Backend::Zenity;
 
 BEGIN {
-  use vars qw( $VERSION $is_test_mode $is_cancel @ISA);  
+  use vars qw( $VERSION $is_test_mode $cancel_option @ISA);  
   $VERSION = '0.11'; # 2024.09.30
   $is_test_mode = 1*0;
-  $is_cancel="#x0020";
+  $cancel_option="#x0020";
   our @ISA = qw ( Exporter );
   our @EXPORT = qw ( 
 			$VERSION
 			$is_test_mode
-			$is_cancel
+			$cancel_option
 			
 			set_dialog_item
 			add_list_item
@@ -30,12 +30,11 @@ BEGIN {
 			ask_to_continue
 			ask_to_choose
 			
-			our %_dialog_config
+			%_dialog_config
 		);
 };
 
-printf "------------ %s (V%s)------------\n",$0,$VERSION 
-	if $is_test_mode;
+printf "------------ %s (V%s)------------\n",$0,$VERSION if $is_test_mode;
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #: Displaying windows
@@ -47,7 +46,7 @@ printf "------------ %s (V%s)------------\n",$0,$VERSION
 my %dialog_defaults = (
         titles      => [ 'Title-Text', 'text line', ' ' ],
         columns     => [ '[O]', 'ident', 'item to choose' ],
-        window_size => [ '200', '350', ' ' ],
+        window_size => [ '150', '400', ' ' ],  
         not_defined => [ 'nil_1', 'nil_2', 'nil_3' ],
     );
 our %_dialog_config = %dialog_defaults;
@@ -62,6 +61,29 @@ my $d = UI::Dialog::Backend::Zenity->new(
         debug       => 0, # debug <>0 from zenity
         test_mode   => $is_test_mode,
         );
+
+# Returns either the three(!) arguments or default-values from %dialog-defaults
+sub set_dialog_itemKW {
+    my ($dialog_field_name, @dialog_items) = @_;
+    my $number_of_arguments = (1 + 3 );
+
+    # Die if no dialog_field_name is provided
+    die "No field-name for dialogs defined, empty arguments." unless @_;
+
+    # Use default values if the dialog_field_name is not found or the number of arguments is incorrect
+    my $local_dialog_defaults = $dialog_defaults{$dialog_field_name} // $dialog_defaults{not_defined};
+    if (@_ != $number_of_arguments) {
+        warn "(t) Error: set-dialog-item for '$dialog_field_name' expects $number_of_arguments arguments, got " . scalar(@_)
+            if $is_test_mode;
+        @dialog_items = @$local_dialog_defaults;
+    }
+
+    # Die if the dialog_field_name is not found in the list of valid dialog_field_names
+    die "Unknown or useless field-name for dialogs '$dialog_field_name'" unless exists $dialog_defaults{$dialog_field_name};
+
+    return @dialog_items;
+};
+
 
 # Returns either the three(!) arguments or default-values from %dialog-defaults
 sub set_dialog_item {
@@ -82,7 +104,8 @@ sub set_dialog_item {
     # Die if the dialog_field_name is not found in the list of valid dialog_field_names
     die "Unknown or useless field-name for dialogs '$dialog_field_name'" unless exists $dialog_defaults{$dialog_field_name};
 
-    return @dialog_items;
+	@{$_dialog_config{$dialog_field_name}} = @dialog_items;
+    #return 0
 };
 
 # Function to facilate input of list-array
@@ -117,12 +140,12 @@ sub message_exit {
 
     if ($err > 0) {
         if ($is_test_mode) {
-            printf "(t) %s\n%s\nExciting program (%s).", $_dialog_config{titles}[0], $txt, $err;
+            say "(t) ".$_dialog_config{titles}[0]."\n$txt\nLeaving program ($err).";
         } else {
             eval {
                 $d->error(
                     title   => $_dialog_config{titles}[0],
-                    text    => "$txt\n\nExciting program ($err)." ,
+                    text    => "$txt\n\nLeaving program with code $err." ,
                     height  => $_dialog_config{window_size}[0],
                     width   => $_dialog_config{window_size}[1]
                 );
@@ -145,7 +168,7 @@ sub message_test_exit {
         if ($is_test_mode) {
             die "(t) $_dialog_config{titles}[0]\n$txt '$test_result' ($err)\n", $err;
         } else {
-            message_exit ("$txt '$test_result'", $err);
+            message_exit ("$txt\n{Counting revealed $test_result}", $err);
         }
     }
 }
@@ -155,19 +178,19 @@ sub message_test_exit {
 #
 sub message_notification {
     my ($txt, $timeout) = @_; # ??? timeout nicht berücksichtigt
-printf "Time?-->".$timeout."\n";
+say "Time?-->".$timeout."\n";
 
     if ($timeout > 0 ) {
         if ($is_test_mode) {
-            printf "(t) %s\n%s", $_dialog_config{titles}[0], $txt;
+            say "(t) ".$_dialog_config{titles}[0]."\n $txt";
         } else {
             eval {
                 $d->infobox(
                     title   => $_dialog_config{titles}[0],
                     text    => $txt,
                     timeout => $timeout,
-                    height  => $_dialog_config{window_size}[0],
-                    width   => $_dialog_config{window_size}[1]
+                    height  => $_dialog_config{window_size}[0], # std 150
+                    width   => $_dialog_config{window_size}[1]  # std 400
                 );
             };
             if ($@) {
@@ -201,13 +224,13 @@ sub ask_to_continue {
         warn "Error displaying notification: $@";
         return 0;
     }
-    return $answer == 1 ? 1 : $is_cancel;
+    return $answer == 1 ? 1 : $cancel_option;
 }
 
 
 # Ask for selection out of list;
 # first 3 strings for titles etc;
-# $is_cancel if no choose
+# $cancel_option if no choose
 sub ask_to_choose {
     die "Missing required keys in the hash" unless exists $_dialog_config{columns} && exists $_dialog_config{list};
 
@@ -229,9 +252,9 @@ sub ask_to_choose {
             return 0;
     };
     if (! $answer[0] gt '' ) {
-        @answer = $is_cancel;
+        @answer = $cancel_option;
     } elsif ($answer[0] eq "0") {
-        @answer = $is_cancel;
+        @answer = $cancel_option;
     };
 
     return @answer;
