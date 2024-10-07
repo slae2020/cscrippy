@@ -4,18 +4,20 @@ use 5.010;
 use strict;
 use warnings;
 use Exporter;
-our @ISA = qw (Exporter);
-
 use Cwd qw( abs_path );
 use File::Spec;
-use lib "/home/stefan/prog/bakki/cscrippy/";
+use lib "/home/stefan/prog/bakki/cscrippy/"; # wg. /Uupm... ???
 use Uupm::Dialog;
 
-our @Export = qw ( ensure_file_existence );
+$VERSION = 'Checker.pm 0.2'; # 2024.09.30
 
-
-my $dir_usb = "media/"; # --> declarations???
-my $dir_mnt = "mnt/";
+BEGIN {
+	our @ISA = qw (Exporter);
+our @EXPORT = qw ( 
+		ensure_program_available
+		ensure_file_existence 
+		);
+}
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #: Check and ensuring the existence and readabilty of
@@ -23,6 +25,21 @@ my $dir_mnt = "mnt/";
 #:     - file
 #:
 
+#::: declarations ::::::::::::::#
+# Eher Konstant für check ???
+my $dir_usb = "media/"; 
+my $dir_mnt = "mnt/";
+
+#::: main ::::::::::::::::::::::#
+printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
+
+#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
+#push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
+#printf "$Uupm::Dialog::is_cancel<->$Uupm::Dialog::VERSION ";
+
+#message_exit ("Hääh", 33);
+
+#::: subs ::::::::::::::::::::::#
 # Function to ensure if a path is readable
 sub ensure_path_readability {
     my ($path, $name) = @_;
@@ -98,15 +115,9 @@ sub ensure_file_existence {
     return $file_name;
 }
 
-#:::
-
-#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
-#push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
-#printf "$Uupm::Dialog::is_cancel<->$Uupm::Dialog::VERSION ";
-
-#message_exit ("Hääh", 33);
+1;
 __END__
-
+???
 transfer ????
 sub check_variable {
     my $var = shift;
@@ -193,3 +204,6 @@ sub find_duplicate2 {
     # Return the list of duplicates
     return @duplicates;
 }
+
+
+1;

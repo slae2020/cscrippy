@@ -1,5 +1,4 @@
 package Uupm::Dialog;
-
 ####
 # license
 ###
@@ -13,28 +12,26 @@ use UI::Dialog::Backend::Zenity;
 
 BEGIN {
   use vars qw( $VERSION $is_test_mode $cancel_option @ISA);  
-  $VERSION = '0.11'; # 2024.09.30
-  $is_test_mode = 1*0;
+  $VERSION = 'Dialog.pm v0.11'; # for Dialog.pm 2024.09.30
+  $is_test_mode = 0;
   $cancel_option="#x0020";
   our @ISA = qw ( Exporter );
   our @EXPORT = qw ( 
-			$VERSION
-			$is_test_mode
-			$cancel_option
+		$VERSION
+		$is_test_mode
+		$cancel_option
 			
-			set_dialog_item
-			add_list_item
-			message_exit
-			message_test_exit
-			message_notification
-			ask_to_continue
-			ask_to_choose
+		set_dialog_item
+		add_list_item
+		message_exit
+		message_test_exit
+		message_notification
+		ask_to_continue
+		ask_to_choose
 			
-			%_dialog_config
+		%_dialog_config
 		);
 };
-
-printf "------------ %s (V%s)------------\n",$0,$VERSION if $is_test_mode;
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #: Displaying windows
@@ -42,6 +39,7 @@ printf "------------ %s (V%s)------------\n",$0,$VERSION if $is_test_mode;
 #:     - notifications
 #:
 
+#::: declarations ::::::::::::::#
 # Dialog-Variable
 my %dialog_defaults = (
         titles      => [ 'Title-Text', 'text line', ' ' ],
@@ -49,10 +47,10 @@ my %dialog_defaults = (
         window_size => [ '150', '400', ' ' ],  
         not_defined => [ 'nil_1', 'nil_2', 'nil_3' ],
     );
-our %_dialog_config = %dialog_defaults;
+my %_dialog_config = %dialog_defaults;
 
 # Declare zenity-window
-my $d = UI::Dialog::Backend::Zenity->new(
+our $d = UI::Dialog::Backend::Zenity->new(
 		title       => $dialog_defaults{titles}[0],
         text        => $dialog_defaults{titles}[1],
         height      => $dialog_defaults{window_size}[0],
@@ -62,6 +60,21 @@ my $d = UI::Dialog::Backend::Zenity->new(
         test_mode   => $is_test_mode,
         );
 
+#::: main ::::::::::::::::::::::#
+printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
+
+#push @{$_dialog_config{list}}, add_list_item (1,'01','first choice'); 
+#push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
+
+#my @answer=ask_to_choose (%_dialog_config);
+#printf ">%s<\n",$_ for @answer;
+
+#my $ansi=ask_to_continue("'usb_stick_name' is missing: ['usb_stick_path' not found]\n\nDo you want to try again?", 22);
+#printf "%s", $ansi;
+
+#@{$_dialog_config{titles}} = set_dialog_item ('titles' , 'Program DoIt', 'Choose your items', '#');
+
+#::: subs ::::::::::::::::::::::#
 # Returns either the three(!) arguments or default-values from %dialog-defaults
 sub set_dialog_itemKW {
     my ($dialog_field_name, @dialog_items) = @_;
@@ -233,9 +246,10 @@ sub ask_to_continue {
 # $cancel_option if no choose
 sub ask_to_choose {
     die "Missing required keys in the hash" unless exists $_dialog_config{columns} && exists $_dialog_config{list};
-
+say 'nünü';
     my @answer;
     eval {
+say 'nününüK';
         @answer = $d->checklist (
                     title   => $_dialog_config{titles}[0],
                     text    => $_dialog_config{titles}[1],
@@ -247,6 +261,7 @@ sub ask_to_choose {
                     list    => $_dialog_config{list}
                   );
     };
+say 'nünününü>'.join (' ',@answer).'<';
     if ($@) {
             warn "Error displaying notification: $@";
             return 0;
@@ -260,22 +275,10 @@ sub ask_to_choose {
     return @answer;
 }
 
-
-################
-
-#push @{$_dialog_config{list}}, add_list_item (1,'01','first choice'); 
-#push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
-
-#my @answer=ask_to_choose (%dialog_config);
-#printf ">%s<\n",$_ for @answer;
-
-#my $ansi=ask_to_continue("'usb_stick_name' is missing: ['usb_stick_path' not found]\n\nDo you want to try again?", 22);
-#printf "%s", $ansi;
-
-#@{$_dialog_config{titles}} = set_dialog_item ('titles' , 'Program DoIt', 'Choose your items', '#');
+1;
 
 __END__
-
+??? 
 examples
 #
 resetdisplay;
