@@ -10,27 +10,29 @@ use Scalar::Util qw(looks_like_number);
 use lib "/home/stefan/perl5/lib/perl5/";  # ???
 use UI::Dialog::Backend::Zenity;
 
+use Data::Dumper; # nur für test ausgaben
+
 BEGIN {
-  use vars qw( $VERSION $is_test_mode $cancel_option @ISA);  
+  use vars qw( $VERSION $is_test_mode $cancel_option @ISA);
   $VERSION = 'Dialog.pm v0.11'; # for Dialog.pm 2024.09.30
   $is_test_mode = 0;
   $cancel_option="#x0020";
   our @ISA = qw ( Exporter );
-  our @EXPORT = qw ( 
-		$VERSION
-		$is_test_mode
-		$cancel_option
-			
-		set_dialog_item
-		add_list_item
-		message_exit
-		message_test_exit
-		message_notification
-		ask_to_continue
-		ask_to_choose
-			
-		%_dialog_config
-		);
+  our @EXPORT = qw (
+        $VERSION
+        $is_test_mode
+        $cancel_option
+
+        set_dialog_item
+        add_list_item
+        message_exit
+        message_test_exit
+        message_notification
+        ask_to_continue
+        ask_to_choose
+
+        %_dialog_config
+        );
 };
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -40,30 +42,33 @@ BEGIN {
 #:
 
 #::: declarations ::::::::::::::#
+
 # Dialog-Variable
-my %dialog_defaults = (
-        titles      => [ 'Title-Text', 'text line', ' ' ],
-        columns     => [ '[O]', 'ident', 'item to choose' ],
-        window_size => [ '150', '400', ' ' ],  
-        not_defined => [ 'nil_1', 'nil_2', 'nil_3' ],
+my %_dialog_defaults = (
+        titles      => [ 'Title-Text (default)', 'text-line (default)', ' ' ],
+        columns     => [ '[O]', 'ident', 'item to choose (default)' ],
+        window_size => [ 150 ,  400 , ' ' ],
+       #list        => not to be defined here!
+        not_defined => [ 'nil_1 (default)', 'nil_2 (default)', 'nil_3 (default)' ], # rename  undefined_values ???
     );
-my %_dialog_config = %dialog_defaults;
+our %_dialog_config = %_dialog_defaults;
 
 # Declare zenity-window
 our $d = UI::Dialog::Backend::Zenity->new(
-		title       => $dialog_defaults{titles}[0],
-        text        => $dialog_defaults{titles}[1],
-        height      => $dialog_defaults{window_size}[0],
-        width       => $dialog_defaults{window_size}[1],
+        title       => $_dialog_defaults{titles}[0],
+        text        => $_dialog_defaults{titles}[1],
+        height      => $_dialog_defaults{window_size}[0],
+        width       => $_dialog_defaults{window_size}[1],
         listheight  => 5,
         debug       => 0, # debug <>0 from zenity
         test_mode   => $is_test_mode,
         );
 
 #::: main ::::::::::::::::::::::#
+
 printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
 
-#push @{$_dialog_config{list}}, add_list_item (1,'01','first choice'); 
+#push @{$_dialog_config{list}}, add_list_item (1,'01','first choice');
 #push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
 
 #my @answer=ask_to_choose (%_dialog_config);
@@ -75,30 +80,10 @@ printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
 #@{$_dialog_config{titles}} = set_dialog_item ('titles' , 'Program DoIt', 'Choose your items', '#');
 
 #::: subs ::::::::::::::::::::::#
+
+# Setting-routine for values for the dialogs like title, tesxt, size etc.
 # Returns either the three(!) arguments or default-values from %dialog-defaults
-sub set_dialog_itemKW {
-    my ($dialog_field_name, @dialog_items) = @_;
-    my $number_of_arguments = (1 + 3 );
-
-    # Die if no dialog_field_name is provided
-    die "No field-name for dialogs defined, empty arguments." unless @_;
-
-    # Use default values if the dialog_field_name is not found or the number of arguments is incorrect
-    my $local_dialog_defaults = $dialog_defaults{$dialog_field_name} // $dialog_defaults{not_defined};
-    if (@_ != $number_of_arguments) {
-        warn "(t) Error: set-dialog-item for '$dialog_field_name' expects $number_of_arguments arguments, got " . scalar(@_)
-            if $is_test_mode;
-        @dialog_items = @$local_dialog_defaults;
-    }
-
-    # Die if the dialog_field_name is not found in the list of valid dialog_field_names
-    die "Unknown or useless field-name for dialogs '$dialog_field_name'" unless exists $dialog_defaults{$dialog_field_name};
-
-    return @dialog_items;
-};
-
-
-# Returns either the three(!) arguments or default-values from %dialog-defaults
+# '' for args allowed
 sub set_dialog_item {
     my ($dialog_field_name, @dialog_items) = @_;
     my $number_of_arguments = (1 + 3 );
@@ -107,18 +92,22 @@ sub set_dialog_item {
     die "No field-name for dialogs defined, empty arguments." unless @_;
 
     # Use default values if the dialog_field_name is not found or the number of arguments is incorrect
-    my $local_dialog_defaults = $dialog_defaults{$dialog_field_name} // $dialog_defaults{not_defined};
-    if (@_ != $number_of_arguments) {
+    #my @local_dialog_defaults = @{$_dialog_defaults{$dialog_field_name}} // @{$_dialog_defaults{not_defined}}; funkt nicht
+    my @local_dialog_defaults = $_dialog_defaults{not_defined};
+    if ($_dialog_defaults{$dialog_field_name}) {
+        @local_dialog_defaults = $_dialog_defaults{$dialog_field_name};
+    }
+    if ( @_ != $number_of_arguments) {
         warn "(t) Error: set-dialog-item for '$dialog_field_name' expects $number_of_arguments arguments, got " . scalar(@_)
             if $is_test_mode;
-        @dialog_items = @$local_dialog_defaults;
+        #@dialog_items = @local_dialog_defaults;
+        @dialog_items = @{$local_dialog_defaults[0]};
     }
-
     # Die if the dialog_field_name is not found in the list of valid dialog_field_names
-    die "Unknown or useless field-name for dialogs '$dialog_field_name'" unless exists $dialog_defaults{$dialog_field_name};
+    die "Unknown or useless field-name for dialogs '$dialog_field_name'" unless exists $_dialog_defaults{$dialog_field_name};
 
-	@{$_dialog_config{$dialog_field_name}} = @dialog_items;
-    #return 0
+    @{$_dialog_config{$dialog_field_name}} = @dialog_items;
+    #return 0 nicht setzen!
 };
 
 # Function to facilate input of list-array
@@ -221,12 +210,12 @@ sub ask_to_continue {
     $err = -1 unless defined $err;
     $txt =~ s/: /:\n/g;
 
-	die "(t) $_dialog_config{titles}[0]\n$txt ($err)\n", -1 
-		if $is_test_mode;
-    
+    die "(t) $_dialog_config{titles}[0]\n$txt ($err)\n", -1
+        if $is_test_mode;
+
     my $answer;
     eval {
-		$answer = $d->question(
+        $answer = $d->question(
             title   => $_dialog_config{titles}[0],
             text    => "$txt ($err)" ,
             height  => $_dialog_config{window_size}[0],
@@ -240,16 +229,17 @@ sub ask_to_continue {
     return $answer == 1 ? 1 : $cancel_option;
 }
 
-
-# Ask for selection out of list;
+# Ask for selection out of checklist;
 # first 3 strings for titles etc;
 # $cancel_option if no choose
 sub ask_to_choose {
-    die "Missing required keys in the hash" unless exists $_dialog_config{columns} && exists $_dialog_config{list};
-say 'nünü';
     my @answer;
+
+    # Die if no list-items are provided
+    die "Error with checklist: no items found to choose."
+        unless defined( $_dialog_config{list}[0] ) && length($_dialog_config{list}[0]) > 0 ;
+
     eval {
-say 'nününüK';
         @answer = $d->checklist (
                     title   => $_dialog_config{titles}[0],
                     text    => $_dialog_config{titles}[1],
@@ -261,9 +251,8 @@ say 'nününüK';
                     list    => $_dialog_config{list}
                   );
     };
-say 'nünününü>'.join (' ',@answer).'<';
     if ($@) {
-            warn "Error displaying notification: $@";
+            warn "Error with checklist: $@";
             return 0;
     };
     if (! $answer[0] gt '' ) {
@@ -278,7 +267,7 @@ say 'nünününü>'.join (' ',@answer).'<';
 1;
 
 __END__
-??? 
+???
 examples
 #
 resetdisplay;
@@ -321,3 +310,28 @@ printf "\nWindows h:%s/w:%s<", $_dialog_config{window_size}[0],$_dialog_config{w
 printf "\n :done: \n";
 
 ab hier junk
+
+
+sub set_dialog_itemKW {
+    my ($dialog_field_name, @dialog_items) = @_;
+    my $number_of_arguments = (1 + 3 );
+
+    # Die if no dialog_field_name is provided
+    die "No field-name for dialogs defined, empty arguments." unless @_;
+
+    # Use default values if the dialog_field_name is not found or the number of arguments is incorrect
+    my $local_dialog_defaults = $_dialog_defaults{$dialog_field_name} // $_dialog_defaults{not_defined};
+    if (@_ != $number_of_arguments) {
+        warn "(t) Error: set-dialog-item for '$dialog_field_name' expects $number_of_arguments arguments, got " . scalar(@_)
+            if $is_test_mode;
+        @dialog_items = @$local_dialog_defaults;
+    }
+
+    # Die if the dialog_field_name is not found in the list of valid dialog_field_names
+    die "Unknown or useless field-name for dialogs '$dialog_field_name'" unless exists $_dialog_defaults{$dialog_field_name};
+
+    return @dialog_items;
+};
+
+unless (exists $_dialog_config{columns} && exists $_dialog_config{list}) {    #??? auch dia anderen dailoge/mess?
+        die "Missing required keys 'columns' and 'list' in the \$_dialog_config hash";

@@ -15,7 +15,9 @@ BEGIN {
 	our @ISA = qw (Exporter);
 our @EXPORT = qw ( 
 		ensure_program_available
-		ensure_file_existence 
+		ensure_file_existence
+		
+		check_variable 
 		);
 }
 
@@ -26,11 +28,13 @@ our @EXPORT = qw (
 #:
 
 #::: declarations ::::::::::::::#
+
 # Eher Konstant für check ???
 my $dir_usb = "media/"; 
 my $dir_mnt = "mnt/";
 
 #::: main ::::::::::::::::::::::#
+
 printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
 
 #@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
@@ -40,6 +44,7 @@ printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
 #message_exit ("Hääh", 33);
 
 #::: subs ::::::::::::::::::::::#
+
 # Function to ensure if a path is readable
 sub ensure_path_readability {
     my ($path, $name) = @_;
@@ -115,7 +120,37 @@ sub ensure_file_existence {
     return $file_name;
 }
 
+# Retrieving type of varaibale
+sub check_variable {
+    my $var = shift;
+
+    # Check if the variable is defined
+    if (!defined $var) {
+        return "The variable is not defined.";
+    }
+
+    # Determine the type of the variable
+    my $type = ref($var);
+    
+    if ($type eq '') {
+        # The variable is a string (or a scalar)
+        return "The variable is a string.";
+    } 
+    elsif ($type eq 'ARRAY') {
+        # The variable is an array reference
+        return "The variable is an array.";
+    } 
+    elsif ($type eq 'HASH') {
+        # The variable is a hash reference
+        return "The variable is a hash.";
+    } 
+    else {
+        return "The variable is of type: $type.";
+    }
+}
+
 1;
+
 __END__
 ???
 transfer ????

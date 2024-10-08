@@ -5,7 +5,7 @@
 use 5.010;
 use strict;
 use warnings;
-#no warnings 'experimental::smartmatch';
+no warnings 'experimental::smartmatch';
 
 use File::Basename;
 use Cwd 'abs_path';
@@ -17,7 +17,7 @@ use lib "/home/stefan/prog/bakki/cscrippy/";
 use Uupm::Dialog;
 use Uupm::Checker;
 
-$is_test_mode = 0;
+$is_test_mode = 01;
 $VERSION = "1.7"; # 2024-10-07
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -27,6 +27,7 @@ $VERSION = "1.7"; # 2024-10-07
 #: uses Zenity for dialogs
 
 #::: declarations ::::::::::::::#
+
 ## Define general parameters for config-file  ??? durchsehen ob nötig
 # script_dir       			=> Directory of the script
 # script_name      			=> Name of the script without extension
@@ -88,7 +89,7 @@ my @config_default		= 	qw ( undef			99  			settings    		undef );
 my @all_taglist = 		(@general_taglist , 	@dialog_taglist , 	@dir_taglist , 		@list_taglist , 	@prog_taglist , 	@config_taglist);
 my @all_tagdefault = 	(@general_tagdefault , 	@dialog_tagdefault, @dir_tagdefault , 	@list_tagdefault , 	@prog_default , 	@config_default);
 
- if ($is_test_mode > 0) {
+ if ($is_test_mode > 5) {
 for my $run (0..$#all_taglist) { # für test ???
 	say "$run :$all_taglist[$run]:--:$all_tagdefault[$run]:";
 }};
@@ -108,8 +109,8 @@ my @selection; 			# from menue (or args)
 # Check if in test mode
 print "(t) start\n" if $is_test_mode > 0;
 
-# Init messenger
-set_dialog_item ('titles' , uc($_script_metadata{script_name})." V".$VERSION, '', '');
+# Init messenger#say "\n\n#::::::::::#";
+set_dialog_item ('titles' , uc($_script_metadata{script_name})." V".$VERSION , '' , '' );
 
 # Reading configuration file
 sub read_configuration {
@@ -160,8 +161,10 @@ sub read_configuration {
             ensure_program_available($config_elements{$tag}) if $config_elements{$tag};  
         }
 	}
-
-	## Pass the config-values to list-configs
+#for my $r (0..$#dialog_items) {
+	#$_dialog_config{$dialog_field_name}[$r] = $dialog_items[$r];
+#}
+	## Pass the config-values (file) to list-configs (program)
 	@list_item = sort split(/\s+/, $config_elements{$list_taglist[3]}) if $list_taglist[3] ;
 	@list_item_header = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
 		@list_item_header = map { s/$cancel_option/ /g; $_ } @list_item_header;
@@ -207,8 +210,8 @@ sub read_configuration {
     message_test_exit ( ( $num_options - scalar @list_id * scalar @list_item ) , "The configuration file \n'$_script_metadata{script_configfile}'\n is not well-filled with data." , 46);
 
     # End of reading config
-    print "(t) File $_script_metadata{script_configfile} cmdNr-->start_selection<\n" if $is_test_mode > 0; #??? 
-    message_notification ("Reading configuration file is done!", 1);
+    if ($start_selection) { print "(t) cmdNr-->$start_selection<\n" if $is_test_mode }
+    message_notification ("Reading configuration file is done!" , 1);
 
     return 0;
 };
@@ -218,7 +221,7 @@ read_configuration ('/home/stefan/prog/bakki/cscrippy/config_offN1006.xml'); # ?
 
 # Init Dialogs
 
-# Push check & the item 1,2 into dialog-list
+# Push check & the item 1,2 into dialog-list ??? move down
 sub add_items_from_config {
     my ($checker, $items, $list_ref ) = @_;
 
@@ -243,9 +246,9 @@ set_dialog_item ( 'titles' ,$config_elements{dialog_title}, $config_elements{dia
 set_dialog_item ( 'columns' , $list_item_header[0] , $list_item_header[1] , $list_item_header[2] );
 set_dialog_item ( 'window_size' , 350 , 500 , '' );
 
-# Fill dialog-list
+# Fill list fo checklist
 for my $i (0 .. $#list_id) {
-    push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_objects[$list_id[$i]][0] );
+	push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_objects[$list_id[$i]][0] );
 }
 add_items_from_config ( 0 , \@prog_taglist , \@{$_dialog_config{list}} );
 add_items_from_config ( 0 , \@config_taglist , \@{$_dialog_config{list}} );
@@ -264,16 +267,14 @@ message_test_exit ( scalar (@duplicates) , "The configuration file \n'$_script_m
 # Checking command-number if given & defined
 if ($start_selection) {
     if ( @list_id && grep { $_ eq $start_selection } @list_id) {
-        @selection = $start_selection;
+       @selection = $start_selection;
     } else {
         message_exit ("Error with commandline: Case '$start_selection' not defined." , 66);
     }
 }
-say join (' ', @selection);
 
 # Get choice of list-elements
 if (! @selection) { 
-say "nü";
     eval { @selection = ask_to_choose (%_dialog_config) };
     if ($@) {
         message_exit("Error occurred: $@", 0);
@@ -281,18 +282,101 @@ say "nü";
         message_exit ("Dialog canceled by user." , 0 ); 
     }
 };
-if ($is_test_mode > 0) {
-    say "(t) The choice was made:";
+
+#say "selc2>".join (' ', @selection)."<";
+
+if ($is_test_mode) {
+    say "\n(t) The choice was made:";
     say "(t) ".join (' ', @selection);
+    
     for my $i (0 .. $#selection) {
         say "(t) \t$selection[$i]";
         for my $j (0 .. $#list_item) {
-            say "$j>".$list_objects[$selection[$i]][$j]."<" if ($selection[$i] < 90) ;
+		  if ( $selection[$i]  ~~ @list_id ) {
+
+	
+            say "$j>".$list_objects[$selection[$i]][$j]."<" if ($selection[$i] < 100) ;
+          };
         }
     }
 };
 
+my @schema = ( 2 , 1 , 3); # ???nach config
+
+sub extract_command {
+	my ($selecter , @tag_list ) = @_;
+	my @progname;
+	
+say "drin";
+print Dumper @tag_list;
+say "\n---";
+say $tag_list[1][1];
+print Dumper @schema;
+
+for my $i (@schema) {
+	say $list_item[$i];
+	#say @tag_list{$list_item[$i]};
+}
+
+
+for my $i (@schema) {
+	for my $j (@list_item) {
+	say $i;
+	say $j;
+	#say $tag_list[$i];
+	}
+}
+
+say "\n---";
+	return @progname;# if defined;
+}
+
+sub extract_progname {
+	my ($selecter , @tag_list) = @_;
+	my @progname;
+
+	for my $j (@tag_list) {
+		for my $k (@tag_list) {
+			if ($config_elements{$j} && $j =~ /_id/ && $config_elements{$j} eq $selecter && $k =~ /_program/) {
+#say $j."::$k<===>$config_elements{$j}###".$config_elements{$k};
+				push @progname , $config_elements{$k};
+				}
+			}
+		}
+	
+	
+#@progname = 'Emil';
+	return @progname;# if defined;
+}
+
+say "\n exec?";
+# Goin for exec :)
+my @cp_taglist = ( @config_taglist , @prog_taglist );
+my @proggi;
+#my @schema = ( 2 , 3 , 1);
+
+for my $case (0 .. $#selection) {
+say "(t) \t$selection[$case]";
+	#for my $j (0 .. $#list_item) {
+		if ( $selection[$case]  ~~ @list_id ) {
+say "Istdabei $case>";#.$list_objects[$selection[$i]][$j]."<";
+print Dumper $list_objects[$selection[$case]][0];
+		push @proggi , extract_command ($selection[$case] , $list_objects[$selection[$case]] )
+        } else {
+#say "Der nicht $case>$selection[$case]<<";
+		push @proggi , extract_progname ($selection[$case] , @prog_taglist);
+		push @proggi , extract_progname ($selection[$case] , @config_taglist);
+		};
+    #}
+}
+
+ 
 # case execute
+
+say "\nPROGGIS";
+print Dumper @proggi;
+say "#########";
+die;
 
 # .... ???
 
@@ -300,15 +384,27 @@ if ($is_test_mode > 0) {
 
  # say "#:cfg:#"; print Dumper %config_elements;
 
- say "#:items:#";
-#te list items  anzeigen
-for my $i (0 .. $#list_id) {
+ say "\n\n#:items:#\n";
+print Dumper @list_id;
+say ('\naaa');
+# list items  anzeigensay "\nPROGGIS";
+print Dumper @proggi;
+for my $i (0 .. $#list_item) {
     my $st = join('   ', @{$list_objects[$list_id[$i]]});
     say "5-".$list_id[$i]."<->\t\t".$st;
 };
 say "5a-\t\t".$list_objects[2][0];
 say "5a-\t\t".$list_objects[5][0]; # 'double prise id???
 
+print Dumper %config_elements;
+say " ";
+
+
+for my $j (@cp_taglist) {
+	if ($j =~ /_program/ ) {
+	say $j."<->".$config_elements{$j};
+	}
+}
 
 say "End:::";
 
@@ -323,7 +419,8 @@ say "End:::";
 #::: subs ::::::::::::::::::::::#
 sub nothimng { };
 #::#
-# Getting the string @tag
+# Getting the string @tagsay "\nPROGGIS";
+print Dumper @proggi;
 # option: within @attr_tag with attribute (leave empty if not desired)
 #
 sub get_xml_element_text {
