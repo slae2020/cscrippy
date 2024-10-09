@@ -97,12 +97,16 @@ sub ensure_mount {
     return 1;
 }
 
-# Function to ensure availibility of a program
+# Function to ensure availibility of a program 
+# only first srtg when splitter definedd
+# else fullstring 
 sub ensure_program_available {
-    my ($prog_name) = @_;
-
-    if (system("command -v '$prog_name' > /dev/null 2>&1") != 0) {
-        message_exit ("Config-Error: program '$prog_name' not found.\n", 24);
+    my ($prog_name , $splitter) = @_;
+    $splitter ||= 'Klsos'; # some ramdon word if undef
+    my @program_parts = split($splitter, $prog_name); 
+   
+    if (system("command -v '$program_parts[0]' > /dev/null 2>&1") != 0) {
+        message_exit ("Config-Error: program '$program_parts[0]' not found.\n", 24);
     }
 }
 

@@ -25,7 +25,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 	<list_cfg>
 		<list_head>vergleiche</list_head>
 		<list_label>ordpaar</list_label>
-		<list_items>_name dir1 dir2</list_items>
+		<list_item_tags>_name dir1 dir2</list_item_tags>
 		
 		<list_prog_id>98</list_prog_id>
 		<list_prog_strg>Just meld</list_prog_strg>

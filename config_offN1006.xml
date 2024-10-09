@@ -17,7 +17,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 	</dialog_cfg>
 		
 	<directories>
-		<home_dir>irgendwas</home_dir>
+		<home_dir>~/homne/slle</home_dir>
 		<standard_dir>~/slae_kim/etc/vorlagen</standard_dir>
 		<storage_dir>/media/stefan</storage_dir>
 		<remote_dir></remote_dir>
@@ -26,7 +26,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 	<list_cfg>
 		<list_head>vorlagen</list_head>
 		<list_label>eintrag</list_label>
-		<list_items>_name prog param template_path template_file</list_items>
+		<list_item_tags>_name prog param template_path 
+		template_file</list_item_tags>
 	
 		<list_prog_id>97</list_prog_id>
 		<list_prog_strg>Office (pur)</list_prog_strg>
@@ -34,7 +35,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 
 		<list_config_id>99</list_config_id>
 		<list_config_strg>Einstellungen</list_config_strg> 
-		<editor_program>gedit</editor_program>
+		<editor_program>gedit $xml_file_name</editor_program>
 	</list_cfg>
 
 <vorlagen>
@@ -62,7 +63,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		
 		<eintrag id="02">
 		<id>02</id>
-		<_name>AB>>Physik (Stand.)</_name>
+		<_name>AB >> Physik (Stand.)</_name>
 		<prog>$std_program</prog>
 		<param>$empty</param>
 		<template_path>$standard_dir/abf</template_path>
@@ -105,9 +106,9 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		
 		<eintrag id="25">
 			<_name>AB>>Physik (QUER 3Sp)</_name>
-			<prog>$std_program</prog>
-			<param>$empty</param>
-			<template_path>$standard_dir/abf</template_path>
+			<prog>$std_program </prog>
+			<param> $empty</param>
+			<template_path> $standard_dir/abf</template_path>
 			<template_file>/ab_physik_3Q202103.ott</template_file> 
 		</eintrag>
 		
@@ -174,8 +175,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<eintrag id="98">
 			<_name>Alle Vorlagen ansehen</_name>
 			<prog>caja</prog>
-			<param>$empty</param>
-			<template_path>$standard_dir</template_path>
+			<param> $empty </param>
+			<template_path> $standard_dir</template_path>
 			<template_file>$empty</template_file>
 		</eintrag>
 		
