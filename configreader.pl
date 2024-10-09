@@ -17,7 +17,7 @@ use lib "/home/stefan/prog/bakki/cscrippy/";
 use Uupm::Dialog;
 use Uupm::Checker;
 
-$is_test_mode = 01;
+$is_test_mode = 0;
 
 $VERSION = "1.7"; # 2024-10-07
 
@@ -77,8 +77,8 @@ my @dialog_tagdefault 	=   qw ( undef			cscrippy		undef				[-]-id-list-items );
 my @dir_taglist 		=	qw ( DEF_dir_subst	home_dir        storage_dir         standard_dir    	remote_dir 	); 
 my @dir_tagdefault 		=   qw ( undef   		undef        	undef         		undef    			undef 		);
 # defines the xml-construct of list items
-my @list_taglist		= 	qw ( DEF_listitems 	list_head		list_label			list_item_tags						); 
-my @list_tagdefault		= 	qw ( undef		 	entries			single-entry		_name-tag1-tag2					); 
+my @list_taglist		= 	qw ( DEF_listitems 	list_head		list_label			list_item_tags		list_item_exec_order	); 
+my @list_tagdefault		= 	qw ( undef		 	entries			single-entry		_name-tag1-tag2		1-2-3			); 
 # defines as list-item standard-prog for execution
 my @prog_taglist 		= 	qw ( DEF_stdprog	list_prog_id    list_prog_strg      std_program ); 
 my @prog_default 		= 	qw ( undef			90    			prog_to_exec      	command-to-exec );
@@ -95,17 +95,20 @@ my @list_item_line;           	# n x m array for n item-lines with m columns eac
 my @list_id = ();       		# n ids ('integers!') for the lines
 my @list_item_name = ('_name');	# m fieldnames (tags) for every line
 my @list_column_name = ();  	# m header for the columns
+my @list_item_exec = (1,2,3); 	# scheme for the order of list-fields in order to execute
 
 # Replacers ??? Zusaetzliche in xml-file angeben lassen können?
 my %_rep = (
 	cancel_option => ' ',
 	empty => ' ',
-#	xml_file_name => $_script_metadata{script_configfile}  ??? nach oben in die Lsten?
+	xml_file_name => ' foobar',
 	);
 # Workparameters
 my $start_selection; 	# from args ??? array?
 #my $start_selection = '02'; 	# for testing
 my @selection; 			# from menue (or args)
+my @list_of_programs_to_execute; # for the execution at the end
+
 
 #::: main ::::::::::::::::::::::#
 # Check if in test mode
@@ -141,11 +144,8 @@ sub read_configuration {
     for my $r (0..$#all_taglist) {
 		my $found_xml_value;
 		$found_xml_value = get_xml_element_text( $dom, $all_taglist[$r] ) if ! ( $all_taglist[$r] =~ /^DEF_/ );
-		if (defined($found_xml_value)) {
+		if ($found_xml_value) {
 			if ($found_xml_value ne '' ) {
-				if ($found_xml_value =~ /~/) {
-					$found_xml_value = replace_homedir ($found_xml_value);
-				}
                 $config_elements{$all_taglist[$r]} = $found_xml_value;
             } elsif ($all_tagdefault[$r] =~ /undef/) {
                 $config_elements{$all_taglist[$r]} = undef;
@@ -173,10 +173,18 @@ sub read_configuration {
 	}
 
 	## Pass the splitted config-values (file) to list-configs (program)
-	@list_item_name = sort split(/\s+/, $config_elements{$list_taglist[3]}) if $list_taglist[3] ;
+	if ($list_taglist[3]) { # name of the tags
+		$config_elements{$list_taglist[3]} =~ s/^\s+|\s+$//g;
+		@list_item_name = split( /\s+/ , $config_elements{$list_taglist[3]} ); # space-separated
+	}
+	if ($list_taglist[4]) { # order of the tag to be executed
+		$config_elements{$list_taglist[4]} =~ s/^\s+|\s+$//g;
+		@list_item_exec = split( /\s+/ , $config_elements{$list_taglist[4]} ); # space-separated
+		@list_item_exec = grep { $_ =~ /^[+-]?\d+$/ } @list_item_exec; # integer only
+
+	}
 	@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
 		@list_column_name = map { s/$cancel_option/ /g; $_ } @list_column_name; # ??? evtl. special replcer sub; $cancel soll halr weg
-	
 
     # Get identifier from the list elements in config (keep '/')
     @list_id = get_xml_attr_array ($dom , '/'.$config_elements{'list_label'} , 'id' ); 
@@ -186,21 +194,23 @@ sub read_configuration {
     # Check for empty entries & replace placeholder (as defined in config)
     my $i = 0;
     my $num_options = 0;
+
     foreach my $item (@list_item_name) {
         foreach my $item_id (@list_id) {
-            my $text = get_xml_element_text ($dom, $item, $config_elements{'list_label'}, $item_id );
+			my $found_xml_value;
 
-            if (defined $text && length($text) > 0) {
-				$text = replace_strg ($text);
-                $list_item_line[$item_id][$i] = $text;
+            $found_xml_value = get_xml_element_text ($dom, $item, $config_elements{'list_label'}, $item_id );
+            if ($found_xml_value) {
+				$found_xml_value = replace_strg ($found_xml_value);
+                $list_item_line[$item_id][$i] = $found_xml_value;
             }
-            ++$num_options if ($text ne '' ) ; ;
+            ++$num_options if ($found_xml_value ne '' ) ; ;
         }
         ++$i;
     };
 
     # Check if the number of entries corresponds with id times id-elements (well filled / no lacks in config)
-    message_test_exit ( ( $num_options - scalar @list_id * scalar @list_item_name ) , "The configuration file \n'$_script_metadata{script_configfile}'\n is not well-filled with data." , 46);
+    message_test_exit ( ( $num_options - scalar @list_id * scalar @list_item_name ) , "The configuration file \n'$_script_metadata{script_configfile}'\n is not well-filled with data or tags are empty." , 46);
 
     # End of reading config
     if ($start_selection) { print "(t) cmdNr->$start_selection<\n" if $is_test_mode }
@@ -293,8 +303,7 @@ if ($is_test_mode) {
 };
 
 # Goin for exec :)
-my @schema = ( 2 , 1 , 4 , 3); # ???nach config
-my @list_of_programs_to_execute; # ??? nach oben
+
 
 # grepping all selected program-name into list-of-programs to be executed
 my @combined_config_elements = map { %config_elements{$_} } grep { !/DEF/ } @prog_taglist;
@@ -316,25 +325,43 @@ say "\nlist_of_programs_to_executeS";
 print Dumper @list_of_programs_to_execute;
 say "\n";
 
-# tiny? fork statt &
-if (@list_of_programs_to_execute && scalar @list_of_programs_to_execute >0 )  {
-	for my $cmd_to_execute (@list_of_programs_to_execute) {
-		say $cmd_to_execute;
-		eval {
-			system($cmd_to_execute." &" );  
-        if ($@) {
-        warn ("Failed to pdsadse???  file: $@", 255);
-		}
-		}
-	}
+## tiny? fork statt &
+#if (@list_of_programs_to_execute)  {
+	#for my $cmd_to_execute (@list_of_programs_to_execute) {
+		#say $cmd_to_execute;
+		#eval {
+			#system($cmd_to_execute." &" );  
+        #if ($@) {
+        #warn ("Failed to pdsadse???  file: $@", 255);
+		#}
+		#}
+	#}
+#}
+die "nicht exec";
+if (@list_of_programs_to_execute) {
+    for my $cmd_to_execute (@list_of_programs_to_execute) {
+        my $pid = fork();
+        if ($pid == 0) {
+            # Child process
+            exec($cmd_to_execute);
+            exit(1);
+        } elsif ($pid > 0) {
+            # Parent process
+            waitpid($pid, 0);
+            if ($? != 0) {
+                warn("Failed to execute file: $?");
+            }
+        } else {
+            warn("Failed to fork: $!");
+        }
+    }
 }
-
 # done :)
 
 # ideen:
 #  - Ausgabe aller items als check
 
-###
+###"Config-Error: selected item '$selection[$case]' not found."
 #: final test ausgabe ::#
 show_all_items () if $is_test_mode > 10;
 
@@ -343,35 +370,40 @@ show_all_items () if $is_test_mode > 10;
 sub nothimng { };
 #::#
 
-# Replace ~ with ENV-value
-sub replace_homedir {
-	my $home_dir = $ENV{HOME} // $config_elements{$dir_taglist[1]};  # ??? 
-	my $home_path = shift;
-	if (defined $home_dir) {
-		$home_path =~ s/~/$home_dir/g;
-	} else {
-		# Handle the case where $home_dir is not defined
-	    warn "Unable to replace '~' placeholder: HOME environment variable and config value for '$dir_taglist[1]' are not set.";
-	}
 
-	return $home_path;
-}
 
 # Replace in string substr using global hash _rep
 #
 sub replace_strg { 
 	my $working_strg = shift;
+	
+	# Replace ~ with ENV-value
+	sub replace_homedir {
+		my $home_dir = $ENV{HOME} // $config_elements{$dir_taglist[1]};  # ??? hard coding dir_tag?
+		my $home_path = shift;
+		if (defined $home_dir) {
+			$home_path =~ s/~/$home_dir/g;
+		} else {
+			# Handle the case where $home_dir is not defined
+			warn "Unable to replace '~' placeholder: HOME environment variable and config value for '$dir_taglist[1]' are not set.";
+		}
+
+		return $home_path;
+	}
 
 	if ($working_strg) {
 		foreach my $key (keys %_rep ) {	
 			my $value = $_rep{$key};
-			if ( $is_test_mode > 10 && $working_strg =~ /\$$key/ ) {
+			if ( $is_test_mode > 10 && $working_strg =~ /\$$key/ ) { # testmode
 				say "Repl '$value' for '\$$key' in ->".$working_strg;
-			}
+			};
 		$working_strg =~ s/\$$key/$value/g ;
 		}
+		if ($working_strg =~ /~/) {
+			$working_strg = replace_homedir ($working_strg);
+		};
 	}
-
+				
 	return $working_strg;
 };
 
@@ -409,7 +441,7 @@ sub get_xml_attr_array {
     my ($doc, $tag, $attr) = @_;
 
     warn "Error: Invalid XML document object" unless ref($doc) eq 'XML::LibXML::Document';
-    warn "Error: Tag name cannot be empty" unless defined($tag) && length($tag) > 0;
+    warn "Error: Tag name cannot be empty ($tag)" unless defined($tag) && length($tag) > 0;
     warn "Error: Attribute name cannot be empty" unless defined($attr) && length($attr) > 0;
 
     # Find nodes with attributes from $doc
@@ -431,12 +463,15 @@ sub extract_commandline {
 	my (@tag_list ) = @_;
 	my $program_name = "";
 
-	for my $schema_item (@schema) {
-		if (defined $list_item_name[$schema_item]) {
-			$program_name .= "" . $tag_list[0][$schema_item];
+print Dumper @list_item_exec ;
+print Dumper $tag_list[0];
+	for my $schema_item (@list_item_exec) {
+		if ($schema_item > $#list_item_name || $schema_item <= 0) {
+			message_exit ("Config-Error: entry for execution order is wrong ($schema_item)." , 51 );
+		} else {
+			$program_name .= $tag_list[0][$schema_item];
 		}
 	}
-
 	return $program_name;
 }
 
@@ -459,7 +494,7 @@ sub extract_progname {
 
 # for debugging
 sub show_all_items {
-# use Dmper ???
+# use Dmper ??? in final version
 	say "\nEingelesene Daten";
 	
 	say "\n#:items: ($#list_id+) #\n";
@@ -489,10 +524,7 @@ sub show_all_items {
 }
 
 __END__
-#### junk
-# Remove newline characters from command results
-chomp($_script_metadata{script_dir}); ???
-chomp($_script_metadata{script_name});
+#### junk ???
 
 # Uncomment to print the hashes
  use Data::Dumper;
