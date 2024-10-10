@@ -32,7 +32,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 			template_path 
 			template_file     
 		</list_item_tags>
-		<list_item_exec_order>  1 2 3 4 </list_item_exec_order>
+		<list_item_exec_order>  1 2 3 4  </list_item_exec_order>
 	
 		<list_prog_id>97</list_prog_id>
 		<list_prog_strg>Office (pur)</list_prog_strg>
@@ -90,7 +90,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<prog>$std_program</prog>
 		<param>$empty</param>
 		<template_path>$standard_dir/abf</template_path>
-		<template_file>/ab_physik_K202008.ott</template_file> 
+		<template_file>/ab_physik ????K202008.ott</template_file> 
 		</eintrag>
 		<eintrag id="23">
 		<id>23</id>

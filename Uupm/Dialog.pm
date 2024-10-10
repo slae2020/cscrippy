@@ -141,9 +141,10 @@ sub message_exit {
     $txt =~ s/:\s*/:\n/g;
 
     if ($err > 0) {
+		$@ = ''; # reset necessary cos an error's calling this sub :)
         if ($is_test_mode) {
             say "(t) ".$_dialog_config{titles}[0]."\n$txt\nLeaving program ($err).";
-        } else {
+        } else {		
             eval {
                 $d->error(
                     title   => $_dialog_config{titles}[0],

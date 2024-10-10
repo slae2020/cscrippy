@@ -17,7 +17,7 @@ use lib "/home/stefan/prog/bakki/cscrippy/";
 use Uupm::Dialog;
 use Uupm::Checker;
 
-$is_test_mode = 0;
+$is_test_mode = 01;
 
 $VERSION = "1.7"; # 2024-10-07
 
@@ -141,16 +141,16 @@ sub read_configuration {
     message_notification( "Start reading '$_script_metadata{config_main_node}' from\n'$_script_metadata{script_configfile}'." , 1 );
 
     # Get general config values
-    for my $r (0..$#all_taglist) {
+    for my $tag_index (0..$#all_taglist) {
 		my $found_xml_value;
-		$found_xml_value = get_xml_element_text( $dom, $all_taglist[$r] ) if ! ( $all_taglist[$r] =~ /^DEF_/ );
+		$found_xml_value = get_xml_text_by_tag( $dom, $all_taglist[$tag_index] ) if ! ( $all_taglist[$tag_index] =~ /^DEF_/ ); # exclude DEF_something
 		if ($found_xml_value) {
-			if ($found_xml_value ne '' ) {
-                $config_elements{$all_taglist[$r]} = $found_xml_value;
-            } elsif ($all_tagdefault[$r] =~ /undef/) {
-                $config_elements{$all_taglist[$r]} = undef;
-            } else {
-				$config_elements{$all_taglist[$r]} = $all_tagdefault[$r];
+			if ($found_xml_value ne '' ) { # string not empty
+                $config_elements{$all_taglist[$tag_index]} = $found_xml_value;
+            } elsif ($all_tagdefault[$tag_index] =~ /^undef$/) { # undef if string is 'undef' 
+                $config_elements{$all_taglist[$tag_index]} = undef;
+            } else { # or set to default
+				$config_elements{$all_taglist[$tag_index]} = $all_tagdefault[$tag_index];
 			}
         }
 	};
@@ -181,32 +181,35 @@ sub read_configuration {
 		$config_elements{$list_taglist[4]} =~ s/^\s+|\s+$//g;
 		@list_item_exec = split( /\s+/ , $config_elements{$list_taglist[4]} ); # space-separated
 		@list_item_exec = grep { $_ =~ /^[+-]?\d+$/ } @list_item_exec; # integer only
-
+		foreach my $i (@list_item_exec) {
+			if ($i > $#list_item_name || $i <= 0) { # must be in range
+				message_exit ("Config-Error: entry for execution order is wrong ($i)." , 51 );
+			}
+		}
 	}
 	@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
 		@list_column_name = map { s/$cancel_option/ /g; $_ } @list_column_name; # ??? evtl. special replcer sub; $cancel soll halr weg
 
     # Get identifier from the list elements in config (keep '/')
-    @list_id = get_xml_attr_array ($dom , '/'.$config_elements{'list_label'} , 'id' ); 
+    @list_id = get_xml_array_by_attribute ($dom , '/'.$config_elements{'list_label'} , 'id' ); 
     message_exit ( "The configuration file \n'$_script_metadata{script_configfile}'\n is missing data.", 44) if (scalar(@list_id) == 0);
 
     # Get all list elements in config
     # Check for empty entries & replace placeholder (as defined in config)
-    my $i = 0;
+    my $item_field = 0;
     my $num_options = 0;
 
     foreach my $item (@list_item_name) {
         foreach my $item_id (@list_id) {
 			my $found_xml_value;
-
-            $found_xml_value = get_xml_element_text ($dom, $item, $config_elements{'list_label'}, $item_id );
-            if ($found_xml_value) {
-				$found_xml_value = replace_strg ($found_xml_value);
-                $list_item_line[$item_id][$i] = $found_xml_value;
+            $found_xml_value = get_xml_text_by_tag ($dom, $item, $config_elements{'list_label'}, $item_id );
+            if ($found_xml_value) { 
+				$found_xml_value = replace_strg ($found_xml_value); # clean/replace as defind
+                $list_item_line[$item_id][$item_field] = $found_xml_value; # put into line
             }
             ++$num_options if ($found_xml_value ne '' ) ; ;
         }
-        ++$i;
+        ++$item_field; # tag for tag
     };
 
     # Check if the number of entries corresponds with id times id-elements (well filled / no lacks in config)
@@ -223,56 +226,37 @@ sub read_configuration {
 read_configuration ('/home/stefan/prog/bakki/cscrippy/config_offN1006.xml'); # ??? wirklich sub? was ist mit cmd-line?
 
 # Init Dialogs
-
-# Push check & the item 1,2 into dialog-list ??? move down
-sub add_items_from_config {
-    my ($checker, $items, $list_ref ) = @_;
-
-    if (scalar @$items < 2) {
-        # Handle the case where there are not enough items
-        die "Not enough items";
-    }
-
-    #
-    my @result = add_list_item( $checker , $config_elements{@$items[1]} , $config_elements{@$items[2]} );
-    if (@result) {
-        push @$list_ref, @result;
-    }
-
-    return 0;
-}
-
-# to sub ???
 # Set elements for list-dialog
-my $addendum = "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; # ??? unsauber
-set_dialog_item ( 'titles' ,$config_elements{dialog_title}, $config_elements{dialog_menue}.$addendum, $config_elements{dialog_column1}); 
+my $addendum = "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; # ??? unsauber 
+set_dialog_item ( 'titles' , $config_elements{dialog_title}, $config_elements{dialog_menue}.$addendum, $config_elements{dialog_column1}); 
 set_dialog_item ( 'columns' , $list_column_name[0] , $list_column_name[1] , $list_column_name[2] );
 set_dialog_item ( 'window_size' , 350 , 500 , '' );
 
-# Fill list fo checklist
-for my $i (0 .. $#list_id) {
-	push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_item_line[$list_id[$i]][0] );
-}
+# Set elements for the listed items (for checklist)
 add_items_from_config ( 0 , \@prog_taglist , \@{$_dialog_config{list}} );
 add_items_from_config ( 0 , \@config_taglist , \@{$_dialog_config{list}} );
-
-# Checking for no double-ids in the list
-my %count;
-my @duplicates;
-for my $j (@{$_dialog_config{list}}) {
-    if (ref($j) ne 'ARRAY') {
-        $count{$j}++;
-        push @duplicates, $j if $count{$j} > 1;
-    }
+foreach my $i (0 .. $#list_id) {
+	push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_item_line[$list_id[$i]][0] );
 }
-message_test_exit ( scalar (@duplicates) , "The configuration file \n'$_script_metadata{script_configfile}'\n contains at least one wrong double identifier." , 45);
+@{$_dialog_config{list}} = sort_pairwise ( @{$_dialog_config{list}});;
+
+# Check for double entries
+my @duplicates = find_array_duplicates (@{$_dialog_config{list}});
+message_test_exit ( 
+	scalar (@duplicates) , 
+	"The configuration file \n'$_script_metadata{script_configfile}'\n contains at least one wrong double identifier." , 
+	45
+	);
 
 # Checking command-number if given & defined
 if ($start_selection) {
     if ( @list_id && grep { $_ eq $start_selection } @list_id) {
        @selection = $start_selection;
     } else {
-        message_exit ("Error with commandline: Case '$start_selection' not defined." , 66);
+        message_exit (
+			"Error with commandline: Case '$start_selection' not defined." , 
+			66
+		);
     }
 }
 
@@ -306,13 +290,12 @@ if ($is_test_mode) {
 
 
 # grepping all selected program-name into list-of-programs to be executed
-my @combined_config_elements = map { %config_elements{$_} } grep { !/DEF/ } @prog_taglist;
-push @combined_config_elements, map { %config_elements{$_} } grep { !/DEF/ } @config_taglist;
-my $combined_config_elements = join(' ', @combined_config_elements);
-for my $case (0 .. $#selection) {
+my   @combined_config_elements = map { %config_elements{$_} } grep { !/^DEF/ } ( @prog_taglist , @config_taglist);
+@combined_config_elements = ( join(' ', @combined_config_elements) ); # all into [0]
+foreach my $case (0 .. $#selection) {
 	if ( $selection[$case] ~~ @list_id ) {
 		push @list_of_programs_to_execute , extract_commandline ( $list_item_line[$selection[$case]] )
-    } elsif ( $combined_config_elements =~ /$selection[$case]/) {
+    } elsif ( $combined_config_elements[0] =~ /$selection[$case]/) {
 		push @list_of_programs_to_execute , extract_progname ($selection[$case] , @prog_taglist);
 		push @list_of_programs_to_execute , extract_progname ($selection[$case] , @config_taglist);
 	} else {
@@ -370,7 +353,20 @@ show_all_items () if $is_test_mode > 10;
 sub nothimng { };
 #::#
 
+# Checking for no double-ids in the list
+sub find_array_duplicates {
+	my @array = @_;
+	my %count;
+	my @dupl;
 
+	for my $j (@array) {
+		if (ref($j) ne 'ARRAY') {
+			$count{$j}++;
+			push @dupl, $j if $count{$j} > 1;
+		}
+	}
+	return @dupl;
+}
 
 # Replace in string substr using global hash _rep
 #
@@ -410,10 +406,11 @@ sub replace_strg {
 # Getting the string @tag
 # option: within @attr_tag with attribute (leave empty if not desired)
 #
-sub get_xml_element_text {
+sub get_xml_text_by_tag {
     my ($doc, $tag , $attr_tag, $attr ) = @_;
+    my @nodes;
     my $element_text;
-
+    
     warn "Error: Invalid XML document object" unless ref($doc) eq 'XML::LibXML::Document';
     warn "Error: Tag name cannot be empty" unless defined($tag) && length($tag) > 0;
 
@@ -424,11 +421,14 @@ sub get_xml_element_text {
 
     # Find tag-literal with xpath from @nodes
     my $xpath = $attr_tag ? '*'.$attr_tag.'[@id="'.$attr.'"]'.$tag : "*$tag";
-    my @nodes = $doc->findnodes($xpath);
+    eval { @nodes = $doc->findnodes($xpath) };
+    if ($@) {
+		message_exit ("Error while searching element in xml-file\n$@" , 255);
+    };
     if (@nodes) {
         $element_text = join('', map { $_->to_literal() } @nodes);
     } else {
-        message_exit "Error: No nodes found for tag '$xpath'";
+        message_exit ("Error: No nodes found for tag '$xpath'" , 255 );
     }
 
     return $element_text;
@@ -437,7 +437,7 @@ sub get_xml_element_text {
 # Get the array @tag of all attributes
 #
 #
-sub get_xml_attr_array {
+sub get_xml_array_by_attribute {
     my ($doc, $tag, $attr) = @_;
 
     warn "Error: Invalid XML document object" unless ref($doc) eq 'XML::LibXML::Document';
@@ -458,19 +458,56 @@ sub get_xml_attr_array {
     return @integers;
 }
 
+# Push check & the item 1,2 into dialog-list 
+sub add_items_from_config {
+    my ($checker, $items, $list_ref ) = @_;
+    if (scalar @$items < 2) { 
+		die "Not enough items to add from config";
+    }
+    #
+    my @result = add_list_item( 
+					$checker , # 0 for off. >=1 for on
+					$config_elements{@$items[1]} , # id
+					$config_elements{@$items[2]}   # array !
+				 );
+    if (@result) {
+        push @$list_ref, @result;
+    }
+    return 0;
+}
+
+# Function to sort the array pairwise
+sub sort_pairwise {
+    my @array = @_;
+
+    # Extract odd-indexed elements (1st, 3rd, 5th, etc.)
+    my @odd_elements = @array[0..$#array/2*2];  # Get elements at indices 0, 2, 4, ...
+    
+    # Create pairs from the odd-indexed elements
+    my @pairs;
+    for (my $i = 0; $i < @odd_elements; $i += 2) {
+        push @pairs, [$odd_elements[$i], $odd_elements[$i+1]] if defined $odd_elements[$i+1];
+    }
+    
+    # Sort pairs
+    my @sorted_pairs = sort { $a->[0] <=> $b->[0] } @pairs;
+
+    # Flatten the sorted pairs back into an array
+    my @sorted_array;
+    foreach my $pair (@sorted_pairs) {
+        push @sorted_array, @$pair;
+    }
+
+    return @sorted_array;
+}
+
 # Get the commandline from item 
 sub extract_commandline {
 	my (@tag_list ) = @_;
 	my $program_name = "";
 
-print Dumper @list_item_exec ;
-print Dumper $tag_list[0];
-	for my $schema_item (@list_item_exec) {
-		if ($schema_item > $#list_item_name || $schema_item <= 0) {
-			message_exit ("Config-Error: entry for execution order is wrong ($schema_item)." , 51 );
-		} else {
-			$program_name .= $tag_list[0][$schema_item];
-		}
+	foreach my $schema_item (@list_item_exec) {
+		$program_name .= $tag_list[0][$schema_item];
 	}
 	return $program_name;
 }
