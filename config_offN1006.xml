@@ -90,7 +90,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<prog>$std_program</prog>
 		<param>$empty</param>
 		<template_path>$standard_dir/abf</template_path>
-		<template_file>/ab_physik ????K202008.ott</template_file> 
+		<template_file>/ab_physik --K202008.ott</template_file> 
 		</eintrag>
 		<eintrag id="23">
 		<id>23</id>

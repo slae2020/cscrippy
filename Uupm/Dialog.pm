@@ -268,6 +268,7 @@ sub ask_to_choose {
 1;
 
 __END__
+
 ???
 examples
 #
@@ -289,7 +290,7 @@ my $ansi=ask_to_continue("'usb_stick_name' is missing: ['usb_stick_path' not fou
 printf "%s", $ansi;
 
 #
-@{$_dialog_config{titles}} = set_dialog_item ('titles','Program DoIt', 'Choose your items'); ??? austasuschen
+@{$_dialog_config{titles}} = set_dialog_item ('titles','Program DoIt', 'Choose your items'); 
 @{$_dialog_config{columns}} = set_dialog_item ('colums', '[@]', 'Id', 'Item');
 #@{$_dialog_config{schnulli}} = set_dialog_item ( 'fixie' ); # faulty
 
@@ -333,6 +334,3 @@ sub set_dialog_itemKW {
 
     return @dialog_items;
 };
-
-unless (exists $_dialog_config{columns} && exists $_dialog_config{list}) {    #??? auch dia anderen dailoge/mess?
-        die "Missing required keys 'columns' and 'list' in the \$_dialog_config hash";

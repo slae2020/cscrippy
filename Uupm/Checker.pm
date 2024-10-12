@@ -34,14 +34,7 @@ my $dir_usb = "media/";
 my $dir_mnt = "mnt/";
 
 #::: main ::::::::::::::::::::::#
-
 printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
-
-#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
-#push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
-#printf "$Uupm::Dialog::is_cancel<->$Uupm::Dialog::VERSION ";
-
-#message_exit ("Hääh", 33);
 
 #::: subs ::::::::::::::::::::::#
 
@@ -156,7 +149,7 @@ sub check_variable {
 1;
 
 __END__
-???
+
 transfer ????
 sub check_variable {
     my $var = shift;
@@ -192,16 +185,6 @@ my @array = (1, 2, 3);
 my %hash = (key1 => 'value1', key2 => 'value2');
 my $undefined;
 
-print check_variable($string), "\n";
-print check_variable(\@array), "\n"; # Pass array reference
-print check_variable(\%hash), "\n";  # Pass hash reference
-print check_variable($undefined), "\n";
- ?????
- 
-
-ensure_program_available ("meld");
-
-
 # Example usage:
 
 ensure_path_readability ("/home/stefan/prog/bakki/cscrippy");
@@ -218,31 +201,12 @@ my $answer;
 $answer = ensure_file_existence ("README.md");
 printf $answer;
 
-**Important Notes:**
-
 * **`ensure_mount`:** The script assumes the `mounter.sh` script is available at the specified location (`$ENV{HOME}/prog/bakki/mounti/mounter.sh`).
+#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
+#push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
+#printf "$Uupm::Dialog::is_cancel<->$Uupm::Dialog::VERSION ";
+
+#message_exit ("Hääh", 33);
 
 __Extra__
 
-# Subroutine to sort an array and find double entries
-# ??? -> Checker.pm
-sub find_duplicate2 {
-    my @array = @_;
-
-    # Sort the array
-    #@array = sort { $a <=> $b } @array;
-
-    # Find duplicates
-    my %count;
-    my @duplicates;
-    foreach my $item (@array) {
-        $count{$item}++;
-        push @duplicates, $item if $count{$item} > 1;
-    }
-
-    # Return the list of duplicates
-    return @duplicates;
-}
-
-
-1;

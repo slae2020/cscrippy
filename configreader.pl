@@ -79,11 +79,9 @@ my @list_item_line;           	# n x m array for n item-lines with m columns eac
 my @list_id = ();       		# n ids ('integers!') for the lines
 my @list_item_name = ('_name');	# m fieldnames (tags) for every line
 
-# ??? beide woanders hin
-my @list_column_name = ();  	# m header for the columns
-my @list_item_exec = (1,2,3); 	# scheme for the order of list-fields in order to execute
 
-# Replacers ??? Zusaetzliche in xml-file angeben lassen können?
+
+# Replacers ??? Renaming und _ weg...
 my %_rep = (
 	cancel_option => ' ',
 	empty => ' ',
@@ -91,12 +89,20 @@ my %_rep = (
 	);
 
 # Workparameters ??? to hash
-my @selected_items; 			# from menue or args
+my @selected_items; # from menue or args
 my @executed_items; # for the execution at the end
+# ??? anders unetrbringen config data ?
+my @list_item_exec = (1,2,3); 	# scheme for the order of list-fields in order to execute
+#new 
+my %executives = (
+	selection => [ 1 , 2 , 3 ],
+	finals => [ 'soffice  sdd /sdsd ' ] ,
+	order => [ 2 , 1 , 2 ]
+	
+);
 
 
 #::: main ::::::::::::::::::::::#
-# Check if in test mode ??? :)
 print "(t) start\n" if $is_test_mode;
 
 #::: Inits 
@@ -107,7 +113,7 @@ my $usage_exit = 0;
 if (@ARGV) {
 	GetOptions (
 		'c:s' 		=> \$_script_metadata{script_configfile},
-		'g:s' 		=> \$config_taglist[3], #??? später, soll xml-Feld überschreiben
+		'g:s' 		=> \&handler,
 		'e'			=> \$extracter, ## ??? mit ec bundling? - extrakt config file
 		'n:i{1,3}' 	=> \@selected_items,#  sub { }, #\@starter, #arr
 		'v|verbose'	=> sub { $is_test_mode = 20;}, # verbose, show all infos
@@ -121,22 +127,24 @@ if ($usage_exit) {
 	) 
 }
 
+sub handler {
+	my ($opt_name , $opt_value) = @_;
+	# Special-entry in _rep with higher priority
+	$_rep{$config_taglist[3]} = "\$ALL$opt_value";
+}
+
+
 say "\n
-ED:>>>$config_taglist[3]<\n
 EX:$extracter\n
 TT:$is_test_mode>";
-#print Dumper @starter;
 say "---";
-print Dumper @selected_items;
+#print Dumper @selected_items;
 say "<\n";
 
 }
 
-# perl "%f"   -e gedit -c tollesfile.xml l -n 01 12 ff 53 b 
-# perl "%f"   -e gedit -c ~/prog/bakki/cscrippy/config_offN1006.xml l -n 01 12 ff 53 b 
-$_script_metadata{script_configfile} = '/home/stefan/prog/bakki/cscrippy/config_offN1006.xml'; # ???  was ist mit cmd-line?
-#read_configuration ('/home/stefan/prog/bakki/cscrippy/config_N1005.xml');
-#read_configuration ('/home/stefan/prog/bakki/cscrippy/config_offN1006.xml'); 
+$_script_metadata{script_configfile} = '/home/stefan/prog/bakki/cscrippy/config_offN1006.xml'; # ??? for testing
+#$_script_metadata{script_configfile} = '/home/stefan/prog/bakki/cscrippy/config_N1005.xml';
 
 #::: init config-metadataset
 # Retrieve the script name, directory, and suffix
@@ -168,9 +176,8 @@ eval {
 if ($@) {
     message_exit ("Failed to parse XML file: $@", 255);
 }
-
 # Main node reflects type of xml-data
-$_script_metadata{config_main_node} = $dom->documentElement->nodeName; #??? eval ?
+$_script_metadata{config_main_node} = $dom->documentElement->nodeName; 
 
 say "\n METAS";
 print Dumper %_script_metadata; ## if verbose?
@@ -186,20 +193,17 @@ set_dialog_item ('titles' , uc($_script_metadata{script_name})." V".$VERSION , '
 #::: Start
 message_notification( "Start reading '$_script_metadata{config_main_node}' from\n'$_script_metadata{script_configfile}'." , 1 );
 
-#die "fffoobar";
 # Get general config values
 for my $tag_index (0..$#all_taglist) {
 	my $found_xml_value;
 	$found_xml_value = get_xml_text_by_tag( $dom, $all_taglist[$tag_index] ) if ! ( $all_taglist[$tag_index] =~ /^DEF_/ ); # exclude DEF_something
-	if ($found_xml_value) {
-		if ($found_xml_value ne '' ) { # string not empty
-            $config_elements{$all_taglist[$tag_index]} = $found_xml_value;
-        } elsif ($all_tagdefault[$tag_index] =~ /^undef$/) { # undef if string is 'undef' 
-            $config_elements{$all_taglist[$tag_index]} = undef;
-        } else { # or set to default
-			$config_elements{$all_taglist[$tag_index]} = $all_tagdefault[$tag_index];
-		}
-    }
+	if ( defined $found_xml_value && $found_xml_value ne '' ) { # string not empty
+		$config_elements{$all_taglist[$tag_index]} = $found_xml_value;
+    } elsif ($all_tagdefault[$tag_index] =~ /^undef$/) { # undef if string is 'undef' 
+		$config_elements{$all_taglist[$tag_index]} = undef;
+    } else { # or set to default
+		$config_elements{$all_taglist[$tag_index]} = $all_tagdefault[$tag_index];
+	}
 };
 
 ## Replace placeholders from config & Ensure the progs are set
@@ -208,10 +212,10 @@ foreach my $placeholder (@general_taglist , @dir_taglist)  {
 	$_rep{$placeholder} = $config_elements{$placeholder} if $config_elements{$placeholder};
 }
 foreach my $tag (@dialog_taglist , @prog_taglist , @config_taglist) {
-	$config_elements{$tag}  = replace_strg_with_hashvalues ( $config_elements{$tag} , %_rep ); 
+	$config_elements{$tag}  = replace_strg_with_hashvalues ( $config_elements{$tag}, $tag , %_rep ); 
 	if ( $tag ~~ @dialog_taglist ) { # replaces string from general-tags into dialog-items
 		$config_elements{$tag} =~ s/\\n//g if $config_elements{$tag}; 
-	}		# ??? falls edito-programmüber cmd NICHT überschreiben, aber wie??
+	}		
 	if ( $tag =~ /_program/ ) { # if a program is given in the config then test it
         ensure_program_available($config_elements{$tag}, ' ' ) if $config_elements{$tag};
         $_rep{$tag} = $config_elements{$tag} if $config_elements{$tag}; # add then prog to hash _rep
@@ -226,15 +230,14 @@ if ($list_taglist[3]) { # name of the tags
 if ($list_taglist[4]) { # order of the tag to be executed
 	$config_elements{$list_taglist[4]} =~ s/^\s+|\s+$//g;
 	@list_item_exec = split( /\s+/ , $config_elements{$list_taglist[4]} ); # space-separated
-	@list_item_exec = grep { $_ =~ /^[+-]?\d+$/ } @list_item_exec; # integer only
+	@list_item_exec = grep { $_ =~ /^[+-]?\d+$/ } @list_item_exec; # +-integer only
 	foreach my $i (@list_item_exec) {
 		if ($i > $#list_item_name || $i <= 0) { # must be in range
 			message_exit ("Config-Error: entry for execution order is wrong ($i)." , 51 );
 		}
 	}
 }
-@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
-	@list_column_name = map { s/$cancel_option/ /g; $_ } @list_column_name; # ??? evtl. special replcer sub; $cancel soll halr weg
+
 
 # Get identifier from the list elements in config (keep '/')
 @list_id = get_xml_array_by_attribute ($dom , '/'.$config_elements{'list_label'} , 'id' ); 
@@ -250,7 +253,7 @@ foreach my $item (@list_item_name) {
 		my $found_xml_value;
         $found_xml_value = get_xml_text_by_tag ($dom, $item, $config_elements{'list_label'}, $item_id );
         if ($found_xml_value) { 
-			$found_xml_value = replace_strg_with_hashvalues ($found_xml_value , %_rep ); # clean/replace as defind
+			$found_xml_value = replace_strg_with_hashvalues ($found_xml_value , "" , %_rep ); # clean/replace as defind
             $list_item_line[$item_id][$item_field] = $found_xml_value; # put into line
         }
         ++$num_options if ($found_xml_value ne '' ) ;
@@ -273,9 +276,15 @@ message_notification (
 
 ## Init Dialogs with config-values
 # Set elements for list-dialog
-my $addendum = "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; # ??? unsauber 
-set_dialog_item ( 'titles' , $config_elements{dialog_title}, $config_elements{dialog_menue}.$addendum, $config_elements{dialog_column1}); 
+$config_elements{dialog_menue} .= "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; 
+set_dialog_item ( 'titles' , $config_elements{dialog_title}, $config_elements{dialog_menue}, $config_elements{dialog_column1}); 
+
+# ??? Komplett umbauen --> $_dialog config direkt?
+my @list_column_name = ();  
+@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
+	@list_column_name = map { s/$cancel_option/ /g; $_ } @list_column_name; # ??? evtl. special replcer sub; $cancel soll halt weg
 set_dialog_item ( 'columns' , $list_column_name[0] , $list_column_name[1] , $list_column_name[2] );
+
 set_dialog_item ( 'window_size' , 350 , 500 , '' );
 
 # Set elements for the listed items (for checklist)
@@ -285,6 +294,7 @@ foreach my $i (0 .. $#list_id) {
 	push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_item_line[$list_id[$i]][0] );
 }
 @{$_dialog_config{list}} = sort_pairwise ( @{$_dialog_config{list}});;
+$_dialog_config{complete_list} = join (' ',  grep { ref($_) ne 'ARRAY' } @{$_dialog_config{list}} ); 
 
 # Check for double entries
 my @duplicates = find_array_duplicates (@{$_dialog_config{list}});
@@ -296,7 +306,7 @@ message_test_exit (
 
 # checking start-selected_itemss from command-line are given & defined
 foreach my $cmd_item (@selected_items) {
-	if ( join (' ', @list_id) !~ $cmd_item ) {
+	if ( $_dialog_config{complete_list} !~ $cmd_item ) {
 		message_exit ( 
 			"Error with commandline: Case '$cmd_item' not defined." , 
 			66
@@ -319,15 +329,19 @@ if ( $selected_items[0] eq '' || scalar @selected_items == 0 ) {
     }
 };
 if ($is_test_mode) { say "\n(t) The choice was made:"; say "(t) ".join (' ', @selected_items); };
+say "NEW:".join (' ' , @{$executives{selection}});
+say "0:@{$executives{selection}}[0]";
+say "1:@{$executives{selection}}[1]";
+say "2:@{$executives{selection}}[2]";
+say "-1:@{$executives{selection}}[-1]";
+say "#:".scalar@{$executives{selection}};
 
 #::: Execution
 # grepping all selected program-name into list-of-programs to be executed
-my   @combined_config_elements = map { %config_elements{$_} } grep { !/^DEF/ } ( @prog_taglist , @config_taglist);
-@combined_config_elements = ( join(' ', @combined_config_elements) ); # all into [0] ??? iwas not defiend [11]
 foreach my $case (0 .. $#selected_items) {
-	if ( $selected_items[$case] ~~ @list_id ) {
+	if ( $selected_items[$case] ~~ @list_id ) { # if selected in list of ids (imprtant for values from commandline)
 		push @executed_items , extract_commandline ( $list_item_line[$selected_items[$case]] )
-    } elsif ( $combined_config_elements[0] =~ /$selected_items[$case]/) {
+    } elsif ( $_dialog_config{complete_list} =~ /$selected_items[$case]/) { # idem for programs from xml-file
 		push @executed_items , extract_progname ($selected_items[$case] , @prog_taglist);
 		push @executed_items , extract_progname ($selected_items[$case] , @config_taglist);
 	} else {
@@ -339,19 +353,9 @@ say "#########";
 say "\nexecuted_itemsS";
 print Dumper @executed_items;
 say "\n";
+                            # show_all_items () ;
 
-## tiny? fork statt &
-#if (@executed_items)  {
-	#for my $cmd_to_execute (@executed_items) {
-		#say $cmd_to_execute;
-		#eval {
-			#system($cmd_to_execute." &" );  
-        #if ($@) {
-        #warn ("Failed to pdsadse???  file: $@", 255);
-		#}
-		#}
-	#}
-#}
+## tiny? fork statt &  ???
 die "nicht exec";
 if (@executed_items) {
     for my $cmd_to_execute (@executed_items) {
@@ -401,9 +405,10 @@ sub find_array_duplicates {
 }
 
 # Replace in string substr using global hash _rep
-#
+# working-strg is the string to be changed
+# key-tag is for (_rep{key-tag} = > replacer ) entries in _rep
 sub replace_strg_with_hashvalues { 
-	my ($working_strg , %_replace_hash ) = @_;
+	my ($working_strg , $key_tag, %_replace_hash ) = @_;
 	
 	if ($working_strg) {
 		foreach my $keyword (keys %_replace_hash ) {	
@@ -411,7 +416,14 @@ sub replace_strg_with_hashvalues {
 			if ( $is_test_mode > 10 && $working_strg =~ /\$$keyword/ ) { # testmode
 				say "Repl '$value' for '\$$keyword' in ->".$working_strg;
 			};
-		$working_strg =~ s/\$$keyword/$value/g ;
+			$working_strg =~ s/\$$keyword/$value/g ;
+		
+			if ( $keyword eq $key_tag ) {
+				if ( $value =~ /^\$ALL/ ) { # $ALL at the beginning replaces complete string 
+				$working_strg = substr ($value, 4) ;
+				}
+			}
+		
 		}
 		if ($working_strg =~ /^\s*~/) { # starts with ~
 			if ($ENV{HOME}) {
@@ -420,6 +432,7 @@ sub replace_strg_with_hashvalues {
 				warn "'Error:ENV(HOME} not found.'";
 			}
 		}
+
 	}
 				
 	return $working_strg;
@@ -532,7 +545,7 @@ sub sort_pairwise {
 }
 
 # Get the commandline from item 
-sub extract_commandline {
+sub extract_commandline { # ??? auflösen 
 	my (@tag_list ) = @_;
 	my $program_name = "";
 
@@ -583,15 +596,22 @@ sub show_all_items {
 		say "$run :$all_taglist[$run]:\t\t\t:$all_tagdefault[$run]:";
 	}
 
-	say "\n configs";
+	say "\n configs\n\tMETAs";
 	print Dumper %_script_metadata;
-	say "";
+	say "\n\tELEMENTS";
 	print Dumper %config_elements;
+	
+	say "\n Dialog configs";
+	print Dumper %_dialog_config;
+	
+	say "\n\t Workparamter EXECUTIV";
+	print Dumper %executives;
 	say "End:::";
 }
 
 __END__
-#### junk ???
+
+#### junk 
 
 # Uncomment to print the hashes
  use Data::Dumper;
@@ -724,3 +744,13 @@ if (exists $argv_commands{b}) {
 die "done";
 die;
 
+my @tt;
+push @tt,  grep { ref($_) ne 'ARRAY' } @{$_dialog_config{list}} ; 
+
+
+say "1";
+print Dumper @selected_items;
+print Dumper @tt;
+@selected_items = @tt;
+say "2";
+print Dumper @selected_items;

@@ -116,8 +116,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<ordpaar>
 		<id>20</id>
 		<_name>rsync_push_td</_name>
-		<dir1> #???</dir1>
-		<dir2> #???</dir2>
+		<dir1> #sfs</dir1>
+		<dir2> $empty</dir2>
 		</ordpaar>
 -->
 	</vergleiche>
