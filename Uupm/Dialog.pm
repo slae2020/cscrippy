@@ -13,17 +13,33 @@ use UI::Dialog::Backend::Zenity;
 use Data::Dumper; # nur für test ausgaben
 
 BEGIN {
-  use vars qw( $VERSION $is_test_mode $cancel_option @ISA);
+  use vars qw ( 
+	$VERSION 
+	$is_silent_mode 
+	$is_test_mode 
+	$cancel_option 
+	$nb_space 
+	
+	$error_message
+	
+	@ISA 
+	);
   $VERSION = 'Dialog.pm v0.11'; # for Dialog.pm 2024.09.30
+  $is_silent_mode = 0;
   $is_test_mode = 0;
-  $cancel_option="#x0020";
+  $cancel_option="#x001B"; # unicode https://www.sonderzeichen.de/ASCII/Unicode-001B.html
+  $nb_space="#x0020";
+  
+  $error_message = "General error.";
   our @ISA = qw ( Exporter );
   our @EXPORT = qw (
-        $VERSION
+    $VERSION
+        $is_silent_mode
         $is_test_mode
         $cancel_option
+        $nb_space
 
-        set_dialog_item
+    set_dialog_item
         add_list_item
         message_exit
         message_test_exit
@@ -31,7 +47,8 @@ BEGIN {
         ask_to_continue
         ask_to_choose
 
-        %_dialog_config
+    %_dialog_config
+    $error_message
         );
 };
 
@@ -140,8 +157,11 @@ sub message_exit {
     $err = 1 unless defined $err;
     $txt =~ s/:\s*/:\n/g;
 
+	 if (! $is_silent_mode) {# ???
+            say "(t) ".$_dialog_config{titles}[0]."\n$txt\nLeaving program ($err).";
+        };
     if ($err > 0) {
-		$@ = ''; # reset necessary cos an error's calling this sub :)
+		$@ = ''; # reset necessary cos an error's calling this sub :) 
         if ($is_test_mode) {
             say "(t) ".$_dialog_config{titles}[0]."\n$txt\nLeaving program ($err).";
         } else {		
@@ -157,8 +177,8 @@ sub message_exit {
         if ($@) {
             warn "Error displaying dialog: $@";
         }
-    };
-    exit $err;
+    }
+    exit $err
 }
 
 # First entry is a test
@@ -181,9 +201,9 @@ sub message_test_exit {
 #
 sub message_notification {
     my ($txt, $timeout) = @_; # ??? timeout nicht berücksichtigt
-say "Time?-->".$timeout."\n";
+say "mess-notif::Time-->".$timeout."?\n";
 
-    if ($timeout > 0 ) {
+    if ($timeout > 0 && ! $is_silent_mode ) {
         if ($is_test_mode) {
             say "(t) ".$_dialog_config{titles}[0]."\n $txt";
         } else {

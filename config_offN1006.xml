@@ -13,7 +13,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 	<dialog_cfg>
 		<dialog_title>$cscrippy_name</dialog_title>
 		<dialog_menue>Test \n Vorlage auswählen (v$versionNr$versionTxt):</dialog_menue>
-		<dialog_column_items>[?] #x0020 Vorlagen#x0020Titel</dialog_column_items>
+		<dialog_column_items>[?] $nb_space Vorlagen$nb_spaceTitel</dialog_column_items>
 	</dialog_cfg>
 		
 	<directories>
