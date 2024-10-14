@@ -85,6 +85,8 @@ our $d = UI::Dialog::Backend::Zenity->new(
 
 printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
 
+#message_notification ("Reading list!",10);
+
 #push @{$_dialog_config{list}}, add_list_item (1,'01','first choice');
 #push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
 
@@ -200,6 +202,29 @@ sub message_test_exit {
 # timout after $2 sec or click (not working)
 #
 sub message_notification {
+    my ($txt, $timeout) = @_; # ??? timeout nicht berücksichtigt
+#say "mess-notif::Time-->".$timeout."?\n";
+
+
+
+    if ($timeout > 0 && ! $is_silent_mode ) {
+        if ($is_test_mode) {
+            say "(t) ".$_dialog_config{titles}[0]."\n $txt";
+        } else {
+my $cmd_to_execute ="zenity --notification --window-icon=\"info\" --height 500 --width 500 --title=\"$_dialog_config{titles}[0]\.\" --text=\"$txt\" --timeout=\"$timeout\" & ";
+#say $cmd_to_execute;
+#say "___";
+my $exit_status = system ($cmd_to_execute);
+if ($exit_status != 0) {
+    warn "Error displaying notification: $exit_status";
+}
+
+
+        }
+    }
+}
+
+sub message_notification2 {
     my ($txt, $timeout) = @_; # ??? timeout nicht berücksichtigt
 say "mess-notif::Time-->".$timeout."?\n";
 

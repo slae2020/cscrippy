@@ -37,7 +37,7 @@ my %_script_metadata = (
 	script_name => basename (abs_path($0) , $suffix),   
     script_suffix  => $suffix ,
     # name of the xml-file to parse
-	configfile 		=> 'nil',	
+	configfile 		=> '',	
 );
 #: Define vars for config-file, not changeable
 my %config_elements;
@@ -46,7 +46,6 @@ my %config_std;
 #: XML-DOM
 my $dom;
 
-                 # ??? nicht doch ein hash?
 #: Define tag-lists as filling for config-xml-file <attribution></attribution>
 # DEF_ for to be ignored by get-xml-value
 # undef leads to undefined value
@@ -122,19 +121,24 @@ if (@ARGV) {
 	}
 }
 # Set the script configuration file if not already set
-if ( !exists $_script_metadata{configfile} || $_script_metadata{configfile} eq '' ) {
-	$error_message = "No XML file defined: '$_script_metadata{configfile}'";
-	message_exit ($error_message , 255);
-} else {
+#if ( !exists $_script_metadata{configfile} || $_script_metadata{configfile} eq '' ) {
+	#$error_message = "No XML file defined: '$_script_metadata{configfile}'";
+	#message_exit ($error_message , 255);# obsolete...
+#} else {
 	$string_map{xml_file_name} = $_script_metadata{configfile}; 
 	if ($is_test_mode && ! $is_silent_mode ) {
 		print "(t) start with '$_script_metadata{configfile}'\n"
 	}
-}
+#}
+
+#system ('zenity --notification  --height 400 --width 400 --window-icon="info" --text="messenger_top_text\ntxt" --timeout=50 ');
 
 #::: init doc for LibXML
 eval {
-	$dom = XML::LibXML->load_xml(location => $_script_metadata{configfile}, no_blanks => 1*0); # <>0 heisst string ohne space \n etc.
+	$dom = XML::LibXML->load_xml(
+							location => $_script_metadata{configfile}, 
+							no_blanks => 1*0 # <>0 heisst string ohne space \n etc.
+							); 
 	$_script_metadata{config_main_node} = $dom->documentElement->nodeName; 
 };
 if ($@) {
@@ -220,78 +224,67 @@ foreach my $item (@list_item_name) {
 };
 
 # Check if the number of entries corresponds with id times id-elements (well filled / no lacks in config)
-message_test_exit ( 
-	( $num_options - scalar @list_id * scalar @list_item_name ) , 
-	"The configuration file \n'$_script_metadata{configfile}'\n is not well-filled with data or tags are empty." , 
-	46
-);
+my $count = ( $num_options - scalar @list_id * scalar @list_item_name );
+$error_message = "The configuration file \n'$_script_metadata{configfile}'\n is not well-filled with data or tags are empty.";
+message_test_exit ($count , $error_message , 46);
 
 # End of reading config
-message_notification ( 
-	"Reading configuration file is done!" , 
-	1 
-);
+$error_message = "Reading configuration file is done!";
+#message_notification ($error_message , 1); ???
 
-## Init Dialogs with config-values ??? sieht schlimm aus
+## Init Dialogs with config-values 
 # Set elements for list-dialog
-$config_elements{dialog_menue} .= "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; 
+	$config_elements{dialog_menue} .= "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; 
 set_dialog_item ( 'titles' , $config_elements{dialog_title}, $config_elements{dialog_menue}, $config_elements{dialog_column1}); 
-my @list_column_name;  # take the xml-value, split into 3, then replace placeholder for splitting with ' '
-@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
-@list_column_name = map { s/$nb_space/ /g; $_ } @list_column_name; 
+	my @list_column_name;  # take the xml-value, split into 3, then replace placeholder for splitting with ' '
+	@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
+	@list_column_name = map { s/$nb_space/ /g; $_ } @list_column_name; 
 set_dialog_item ( 'columns' , @list_column_name );
 set_dialog_item ( 'window_size' , 350 , 500 , '' );
+
 # Set elements for the listed items (for checklist)
 add_items_from_config ( 0 , \@prog_taglist , \@{$_dialog_config{list}} );
 add_items_from_config ( 0 , \@config_taglist , \@{$_dialog_config{list}} );
 foreach my $i (0 .. $#list_id) {
 	push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_item_line[$list_id[$i]][0] );
 }
+
 # Check for double entries
 my @duplicates = find_array_duplicates (@{$_dialog_config{list}});
-message_test_exit ( 
-	scalar (@duplicates) , 
-	"The configuration file \n'$_script_metadata{configfile}'\n contains at least one wrong double identifier." , 
-	45
-	);
+$error_message = "The configuration file \n'$_script_metadata{configfile}'\n contains at least one wrong double identifier.";
+message_test_exit ( scalar (@duplicates) , $error_message ,  45);
+
 # Sort & define complet-list	
 @{$_dialog_config{list}} = sort_pairwise ( @{$_dialog_config{list}});;
 $_dialog_config{complete_list} = join (' ',  grep { ref($_) ne 'ARRAY' } @{$_dialog_config{list}} ); 
 # Checking items from command-line are given & defined
 foreach my $cmd_item ( @{$shell_commands{commandline}} ) {
 	if ( $_dialog_config{complete_list} !~ $cmd_item ) {
-		message_exit ( 
-			"Error with commandline: Case '$cmd_item' not defined." , 
-			66
-		) 
+		$error_message = "Error with commandline: Case '$cmd_item' not defined.";
+		message_exit ($error_message , 66) 
 	}
 }
 
 #::: Main-case: extract OR exec cmd-lines OR ask with checklist
 if ($shell_commands{extract_all}) { 
 	show_all_items ();
-	message_exit ( 
-		"Extraction done, program will finish." , 
-		0 
-		)
+	$error_message = "Extraction done, program will finish.";
+	message_exit ($error_message , 0)
 } elsif (scalar @{$shell_commands{commandline}} == 0 ) { # ask-for-selection
     eval { @{$shell_commands{selection}} = ask_to_choose (%_dialog_config) };
     if ($@) {
-        message_exit ( 
-			"Error occurred: $@", 
-			0
-		);
+		$error_message = "Error occurred: $@";
+        message_exit ($error_message , 0)
+
     } elsif ($shell_commands{selection}[0] eq $cancel_option) {
-        message_exit ( 
-			"Dialog canceled by user." , 
-			0 
-		)
+		$error_message = "Dialog canceled by user.";
+        message_exit ($error_message , 0)
     }
 } else  { # take from comd-line
 	@{$shell_commands{selection}} = @{$shell_commands{commandline}}
 };
 
-#::: Execution  ??? check ensure prior to exec?
+#::: Execution
 # grepping all selected program-name into list-of-programs to be executed
 my $limit = (scalar @{$shell_commands{selection}} - 1); # naja
 foreach my $case (0 .. $limit) {
@@ -303,27 +296,11 @@ foreach my $case (0 .. $limit) {
         };
         push @{$shell_commands{execution_list}} , $program_name ;
     } elsif ( $_dialog_config{complete_list} =~ /$selected_case/) { # idem for programs from xml-file
-say "####::##";
-print Dumper @prog_taglist;		
-say join (' ', @prog_taglist);
-for my $ii (@prog_taglist) {
-	say "$ii--$config_elements{$ii}#";
-};
-#my $llist = map { @prog_taglist =~ $_ } @{$config_elements};
-my @selected_elements;
-
-foreach my $pattern (@prog_taglist) {
-    push @selected_elements, grep { $_ =~ $pattern } $config_elements{$pattern};
-}
-print Dumper @selected_elements;
-		
         push @{$shell_commands{execution_list}} , extract_progname ($selected_case , '_program' , '_id', @prog_taglist);
         push @{$shell_commands{execution_list}} , extract_progname ($selected_case , '_program' , '_id', @config_taglist)
     } else {
-        message_exit (
-            "Config-Error: selected item '$selected_case' not found." ,
-            255
-        )
+        $error_message = "Config-Error: selected item '$selected_case' not found.";
+        message_exit ($error_message , 255)
     }
 }
 if ( $is_test_mode > 0 ) { 
@@ -517,17 +494,17 @@ sub sort_pairwise {
 }
 
 # Get the prog-name from item
-sub extract_progname {
+sub extract_progname { # mit Umstellung auf oo vielelicht weg
 	my ($selector , $substr_tag , $substr_attrib , @tag_list) = @_;
 #	my ($substr_tag1 , $substr_attrib1 ) = ('_program' , '_id' );
-#    my ( $selector, $tag_pattern, $attribute_pattern, @tag_list) = @_;???
+#    my ( $selector, $tag_pattern, $attribute_pattern, @tag_list) = @_;
 	my @program_name;
 
 	for my $j (@tag_list) {
 		if ($config_elements{$j} && $j =~ /$substr_attrib/ && $config_elements{$j} eq $selector ) {
 			for my $k (@tag_list) {
 				if  ( $k =~ /$substr_tag/) {
-say $j."::$k<===>$config_elements{$j}###".$config_elements{$k};
+#say $j."::$k<===>$config_elements{$j}###".$config_elements{$k};
 					push @program_name , $config_elements{$k};
 				}
 			}
