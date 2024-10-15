@@ -150,7 +150,7 @@ if ($@) {
 
 #::: Start
 $error_message =  "Start reading '$_script_metadata{config_main_node}' from\n'$_script_metadata{configfile}'.";
-message_notification ($error_message , 2);
+message_notification ($error_message , 1);
 
 # Get general config values
 for my $tag_index (0..$#all_taglist) {
@@ -230,7 +230,7 @@ message_test_exit ($count , $error_message , 46);
 
 # End of reading config
 $error_message = "Reading configuration file is done!";
-#message_notification ($error_message , 1); ???
+message_notification ($error_message , 1); # ???
 
 ## Init Dialogs with config-values 
 # Set elements for list-dialog

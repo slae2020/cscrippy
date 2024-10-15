@@ -7,6 +7,7 @@ use strict;
 use warnings;
 use Exporter;
 use Scalar::Util qw(looks_like_number);
+use IPC::System::Simple qw(system);
 use lib "/home/stefan/perl5/lib/perl5/";  # ???
 use UI::Dialog::Backend::Zenity;
 
@@ -85,7 +86,7 @@ our $d = UI::Dialog::Backend::Zenity->new(
 
 printf "------------ %s ('%s')------------\n",$0,$VERSION if $is_test_mode;
 
-#message_notification ("Reading list!",10);
+#message_notification ("Reading list!",1);
 
 #push @{$_dialog_config{list}}, add_list_item (1,'01','first choice');
 #push @{$_dialog_config{list}}, add_list_item (0,'02','secondbest');
@@ -201,7 +202,7 @@ sub message_test_exit {
 # Notification-window
 # timout after $2 sec or click (not working)
 #
-sub message_notification {
+sub message_notification3 {
     my ($txt, $timeout) = @_; # ??? timeout nicht berücksichtigt
 #say "mess-notif::Time-->".$timeout."?\n";
 
@@ -223,6 +224,39 @@ if ($exit_status != 0) {
         }
     }
 }
+
+sub message_notification {
+	my ($txt, $timeout) = @_;
+	
+	if (! $is_silent_mode ) {
+		 if ($is_test_mode) {
+            say "(t) ".$_dialog_config{titles}[0]."\n $txt";
+        } else {
+			my $zenity_cmd = `which zenity`;
+			chomp($zenity_cmd);
+			if (!$zenity_cmd || !-x $zenity_cmd) {
+				warn "zenity command not found or not executable";
+			return;
+			}
+			my $cmd_to_execute = [$zenity_cmd, '--notification', '--window-icon=info', '--height', '500', '--width', '500', '--title', $_dialog_config{titles}[0], '--text', $txt, '--timeout', $timeout, '&'];
+			my $exit_status = system( [0..5], @$cmd_to_execute);
+			#if ($exit_status > 5) { # eigtl != 0
+			#warn "Error displaying notification: $exit_status";
+			#}
+			if ($exit_status > 5) {
+				my $error_msg = "Error displaying notification: $exit_status";
+				if ($? >> 8) {
+					$error_msg .= " (exit code: " . ($? >> 8) . ")";
+				}
+				if ($? & 127) {
+					$error_msg .= " (signal: " . ($? & 127) . ")";
+				}
+			warn $error_msg;
+			}
+		}
+	}
+}
+
 
 sub message_notification2 {
     my ($txt, $timeout) = @_; # ??? timeout nicht berücksichtigt

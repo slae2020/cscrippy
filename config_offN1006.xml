@@ -5,8 +5,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 
 	<general>
 		<cscrippy_name date="2024-10-06">Office Vorlagen Starter</cscrippy_name>
-		<versionNr>1.7c</versionNr>
-		<versionTxt>; noch ungetestet für die Pfade..lang</versionTxt>
+		<versionNr>1.8a</versionNr>
+		<versionTxt>; noch ungetestet für die Pfade.</versionTxt>
 		<lang>de-DE</lang>
 	</general>
 
@@ -17,9 +17,9 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 	</dialog_cfg>
 		
 	<directories>
-		<home_dir>/homne/slle</home_dir>
-		<standard_dir>~/slae_kim/etc/vorlagen</standard_dir>
-		<storage_dir>/media/stefan</storage_dir>
+		<home_dir>/home/stefan</home_dir>
+		<standard_dir>~/slae_kim/etc/vorlagen/</standard_dir>
+		<storage_dir>/media/stefan/</storage_dir>
 		<remote_dir></remote_dir>
 	</directories>
 
@@ -53,7 +53,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 			<_name>writer (leer)</_name>
 			<prog>$std_program --writer</prog>
 			<param> </param>
-			<template_path>$home_dir/prog</template_path>
+			<template_path> </template_path>
 			<template_file>$empty</template_file>
 		</eintrag>
 
@@ -62,8 +62,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 			<_name>slae Brief</_name>
 			<prog>$std_program</prog>
 			<param>$empty</param>
-			<template_path> $standard_dir</template_path>
-			<template_file>   ~/LaeHomeBrief.ott</template_file>
+			<template_path>$standard_dir</template_path>
+			<template_file>LaeHomeBrief.ott</template_file>
 		</eintrag>
 		
 		<eintrag id="02">
@@ -71,8 +71,8 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<_name>AB >> Physik (Stand.)</_name>
 		<prog>$std_program</prog>
 		<param>$empty</param>
-		<template_path>$standard_dir/abf</template_path>
-		<template_file>/ab_physik_K202008.ott</template_file> 
+		<template_path>$standard_dir/abf/</template_path>
+		<template_file>ab_physik_K202008.ott</template_file> 
 		</eintrag>
 		
 		<eintrag  id="03">
@@ -80,7 +80,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<_name>AB>>Mathe (leer)</_name>
 		<prog>$std_program</prog>
 		<param>$empty</param>
-		<template_path>$standard_dir/abf</template_path>
+		<template_path>$standard_dir/abf/</template_path>
 		<template_file>/ab_matheL202010.ott</template_file> 
 		</eintrag>
 		
@@ -117,7 +117,7 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 			<template_file>/ab_physik_3Q202103.ott</template_file> 
 		</eintrag>
 		
-<!--
+
 		<eintrag>
 		<id>32</id>
 		<_name>AB>>Mathe (Karos)</_name>
@@ -143,14 +143,17 @@ xsi:noNamespaceSchemaLocation="/home/stefan/prog/bakki/Bakki-the-stick/config.xs
 		<template_path>$standard_dir/abf</template_path>
 		<template_file>/lk_physik_OSpr_2311.ott</template_file> 
 		</eintrag>
-		<eintrag>
-		<id>62</id>
+		
+		<eintrag id="62">
+		
 		<_name>LK Physik mit SprachBewertung</_name>
 		<prog>$std_program</prog>
 		<param>$empty</param>
 		<template_path>$standard_dir/abf</template_path>
 		<template_file>/lk_physik_Spr_2311.ott</template_file> 
 		</eintrag>
+
+<!--
 		<eintrag>
 		<id>63</id>
 		<_name>LK Mathe</_name>

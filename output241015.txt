@@ -1,0 +1,277 @@
+
+Eingelesene Daten
+	'config_offN1006.xml'
+
+	ALL DEFAULT tags
+tag_0 :DEF_general:    	:undef:
+tag_1 :cscrippy_name:    	:some_name:
+tag_2 :versionNr:    	:undef:
+tag_3 :versionTxt:    	:undef:
+tag_4 :lang:    	:undef:
+tag_5 :DEF_dialogtxts:    	:undef:
+tag_6 :dialog_title:    	:cscrippy:
+tag_7 :dialog_menue:    	:undef:
+tag_8 :dialog_column_items:    	:[-]-id-list-items:
+tag_9 :DEF_dir_subst:    	:undef:
+tag_10 :home_dir:    	:undef:
+tag_11 :storage_dir:    	:undef:
+tag_12 :standard_dir:    	:undef:
+tag_13 :remote_dir:    	:undef:
+tag_14 :DEF_listitems:    	:undef:
+tag_15 :list_head:    	:entries:
+tag_16 :list_label:    	:single-entry:
+tag_17 :list_item_tags:    	:_name-tag1-tag2:
+tag_18 :list_item_exec_order:    	:1-2-3:
+tag_19 :DEF_stdprog:    	:undef:
+tag_20 :list_prog_id:    	:90:
+tag_21 :list_prog_strg:    	:prog_to_exec:
+tag_22 :std_program:    	:command-to-exec:
+tag_23 :DEF_cfgprog:    	:undef:
+tag_24 :list_config_id:    	:99:
+tag_25 :list_config_strg:    	:settings:
+tag_26 :editor_program:    	:undef:
+
+	LIST ids  (count:8+)
+$VAR1 = [
+          '00',
+          '01',
+          '02',
+          '03',
+          22,
+          23,
+          24,
+          25,
+          98
+        ];
+
+	FIELDS per id
+$VAR1 = '_name';
+$VAR2 = 'prog';
+$VAR3 = 'param';
+$VAR4 = 'template_path';
+$VAR5 = 'template_file';
+
+	FULL list (replaced strings)
+  #00<->writer (leer):	    :soffice --writer:	    : :	    :/homne/slle/prog:	    : 
+  #01<->slae Brief:	    :soffice:	    : :	    : /home/stefan/slae_kim/etc/vorlagen:	    :   /home/stefan/LaeHomeBrief.ott
+  #02<->AB >> Physik (Stand.):	    :soffice:	    : :	    :/home/stefan/slae_kim/etc/vorlagen/abf:	    :/ab_physik_K202008.ott
+  #03<->AB>>Mathe (leer):	    :soffice:	    : :	    :/home/stefan/slae_kim/etc/vorlagen/abf:	    :/ab_matheL202010.ott
+  #22<->AB>>Physik (Stdquer?):	    :soffice:	    : :	    :/home/stefan/slae_kim/etc/vorlagen/abf:	    :/ab_physik --K202008.ott
+  #23<->AB>>Physik (Paetec):	    :soffice:	    : :	    :/home/stefan/slae_kim/etc/vorlagen/abf:	    :/ab_physik_paetec201904.ott
+  #24<->AB>>Physik (QUER 2Sp):	    :soffice:	    : :	    :/home/stefan/slae_kim/etc/vorlagen/abf:	    :/ab_physik_2Q202002.ott
+  #25<->AB>>Physik (QUER 3Sp):	    :soffice :	    :  :	    : /home/stefan/slae_kim/etc/vorlagen/abf:	    :/ab_physik_3Q202103.ott
+  #98<->Alle Vorlagen ansehen:	    :caja:	    :   :	    : /home/stefan/slae_kim/etc/vorlagen:	    : 
+
+	STRING MAP
+$VAR1 = 'cancel_option';
+$VAR2 = '#x001B';
+$VAR3 = 'versionTxt';
+$VAR4 = "; noch ungetestet f\x{fc}r die Pfade..lang";
+$VAR5 = 'home_dir';
+$VAR6 = '/homne/slle';
+$VAR7 = 'lang';
+$VAR8 = 'de-DE';
+$VAR9 = 'cscrippy_name';
+$VAR10 = 'Office Vorlagen Starter';
+$VAR11 = 'xml_file_name';
+$VAR12 = 'config_offN1006.xml';
+$VAR13 = 'empty';
+$VAR14 = ' ';
+$VAR15 = 'standard_dir';
+$VAR16 = '~/slae_kim/etc/vorlagen';
+$VAR17 = 'std_program';
+$VAR18 = 'soffice';
+$VAR19 = 'editor_program';
+$VAR20 = 'gedit config_offN1006.xml';
+$VAR21 = 'nb_space';
+$VAR22 = '#x0020';
+$VAR23 = 'versionNr';
+$VAR24 = '1.7c';
+$VAR25 = 'storage_dir';
+$VAR26 = '/media/stefan';
+
+CONFIG
+	METAs
+$VAR1 = 'config_main_node';
+$VAR2 = 'office-starter_options';
+$VAR3 = 'version';
+$VAR4 = '1.7d';
+$VAR5 = 'configfile';
+$VAR6 = 'config_offN1006.xml';
+$VAR7 = 'script_name';
+$VAR8 = 'configreader';
+$VAR9 = 'LANG';
+$VAR10 = 'de_DE.UTF-8';
+$VAR11 = 'script_suffix';
+$VAR12 = '.pl';
+$VAR13 = 'script_dir';
+$VAR14 = '/home/stefan/prog/bakki/cscrippy';
+#
+	ELEMENTS
+$VAR1 = 'DEF_dir_subst';
+$VAR2 = undef;
+$VAR3 = 'list_head';
+$VAR4 = 'vorlagen';
+$VAR5 = 'dialog_column_items';
+$VAR6 = '[?] #x0020 Vorlagen#x0020Titel';
+$VAR7 = 'list_config_strg';
+$VAR8 = 'Einstellungen';
+$VAR9 = 'dialog_title';
+$VAR10 = 'Office Vorlagen Starter';
+$VAR11 = 'list_prog_id';
+$VAR12 = '97';
+$VAR13 = 'DEF_stdprog';
+$VAR14 = undef;
+$VAR15 = 'list_prog_strg';
+$VAR16 = 'Office (pur)';
+$VAR17 = 'lang';
+$VAR18 = 'de-DE';
+$VAR19 = 'home_dir';
+$VAR20 = '/homne/slle';
+$VAR21 = 'DEF_dialogtxts';
+$VAR22 = undef;
+$VAR23 = 'list_config_id';
+$VAR24 = '99';
+$VAR25 = 'list_item_exec_order';
+$VAR26 = '1 2 3 4';
+$VAR27 = 'DEF_cfgprog';
+$VAR28 = undef;
+$VAR29 = 'remote_dir';
+$VAR30 = undef;
+$VAR31 = 'DEF_general';
+$VAR32 = undef;
+$VAR33 = 'standard_dir';
+$VAR34 = '~/slae_kim/etc/vorlagen';
+$VAR35 = 'list_label';
+$VAR36 = 'eintrag';
+$VAR37 = 'cscrippy_name';
+$VAR38 = 'Office Vorlagen Starter';
+$VAR39 = 'versionTxt';
+$VAR40 = "; noch ungetestet f\x{fc}r die Pfade..lang";
+$VAR41 = 'storage_dir';
+$VAR42 = '/media/stefan';
+$VAR43 = 'dialog_menue';
+$VAR44 = "Test  Vorlage ausw\x{e4}hlen (v1.7c; noch ungetestet f\x{fc}r die Pfade..lang):
+		(processed with 'configreader 1.7d')";
+$VAR45 = 'versionNr';
+$VAR46 = '1.7c';
+$VAR47 = 'DEF_listitems';
+$VAR48 = undef;
+$VAR49 = 'list_item_tags';
+$VAR50 = '_name 
+			prog 
+			param 
+			template_path 
+			template_file';
+$VAR51 = 'editor_program';
+$VAR52 = 'gedit config_offN1006.xml';
+$VAR53 = 'std_program';
+$VAR54 = 'soffice';
+##
+	DIALOG configs
+$VAR1 = 'not_defined';
+$VAR2 = [
+          'nil_1 (default)',
+          'nil_2 (default)',
+          'nil_3 (default)'
+        ];
+$VAR3 = 'window_size';
+$VAR4 = [
+          350,
+          500,
+          ''
+        ];
+$VAR5 = 'titles';
+$VAR6 = [
+          'Office Vorlagen Starter',
+          "Test  Vorlage ausw\x{e4}hlen (v1.7c; noch ungetestet f\x{fc}r die Pfade..lang):
+		(processed with 'configreader 1.7d')",
+          undef
+        ];
+$VAR7 = 'list';
+$VAR8 = [
+          '00',
+          [
+            'writer (leer)',
+            0
+          ],
+          '01',
+          [
+            'slae Brief',
+            0
+          ],
+          '02',
+          [
+            'AB >> Physik (Stand.)',
+            0
+          ],
+          '03',
+          [
+            'AB>>Mathe (leer)',
+            0
+          ],
+          22,
+          [
+            'AB>>Physik (Stdquer?)',
+            0
+          ],
+          23,
+          [
+            'AB>>Physik (Paetec)',
+            0
+          ],
+          24,
+          [
+            'AB>>Physik (QUER 2Sp)',
+            0
+          ],
+          25,
+          [
+            'AB>>Physik (QUER 3Sp)',
+            0
+          ],
+          97,
+          [
+            'Office (pur)',
+            0
+          ],
+          98,
+          [
+            'Alle Vorlagen ansehen',
+            0
+          ],
+          99,
+          [
+            'Einstellungen',
+            0
+          ]
+        ];
+$VAR9 = 'columns';
+$VAR10 = [
+           '[?]',
+           ' ',
+           'Vorlagen Titel'
+         ];
+$VAR11 = 'complete_list';
+$VAR12 = '00 01 02 03 22 23 24 25 97 98 99';
+###
+	SHELL CMDS
+$VAR1 = 'extract_all';
+$VAR2 = 1;
+$VAR3 = 'selection';
+$VAR4 = [];
+$VAR5 = 'execution_order';
+$VAR6 = [
+          1,
+          2,
+          3,
+          4
+        ];
+$VAR7 = 'execution_list';
+$VAR8 = [];
+$VAR9 = 'commandline';
+$VAR10 = [];
+End:::
+(t) Office Vorlagen Starter
+Extraction done, program will finish.
+Leaving program (0).
