@@ -12,13 +12,13 @@ use Cwd 'abs_path';
 use XML::LibXML;
 use Getopt::Long qw(GetOptions :config no_ignore_case );
 
-use Data::Dumper; # nur für test ausgaben
+#use Data::Dumper; # nur für test ausgaben
 
 use lib "/home/stefan/prog/bakki/cscrippy/";
 use Uupm::Dialog;
 use Uupm::Checker;
 
-$VERSION = "1.7d"; # 2024-10-07
+$VERSION = "1.7beta"; # 2024-10-16
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 #: Reader for xml-files (configuration-file)
@@ -29,19 +29,18 @@ $VERSION = "1.7d"; # 2024-10-07
 #::: declarations ::::::::::::::#
 #: Define general parameters for this script
 my $suffix = '.pl'; 
-my %_script_metadata = (
-	version 				=> $VERSION,
-	LANG	=> $ENV{LANG},
+my %script_metadata = (
+	version 		=> $VERSION,
+	LANG			=> $ENV{LANG},
 	# path & name of the script
-	script_dir => dirname (abs_path($0)),
-	script_name => basename (abs_path($0) , $suffix),   
-    script_suffix  => $suffix ,
+	script_dir 		=> dirname (abs_path($0)),
+	script_name 	=> basename (abs_path($0) , $suffix),   
+    script_suffix  	=> $suffix ,
     # name of the xml-file to parse
 	configfile 		=> '',	
 );
 #: Define vars for config-file, not changeable
 my %config_elements;
-my %config_std;
 
 #: XML-DOM
 my $dom;
@@ -105,52 +104,50 @@ if (@ARGV) {
 			$string_map{$config_taglist[3]} = "\$ALL$opt_value";
 		}
 	GetOptions (
-		'c=s' 		=> \$_script_metadata{configfile}, # the NECESSARY XML-file
+		'c=s' 		=> \$script_metadata{configfile}, # the NECESSARY XML-file
 		'g:s' 		=> \&handler, # other edit-prog (with other file-name possible)
-		'e'			=> sub { $shell_commands{extract_all} = 1 }, 	## ??? mit ec bundling? - extrakt config file mit -n nur teil?
+		'e'			=> sub { $shell_commands{extract_all} = 1 }, 	# extrakt all(!) config-elements
 		'n:i{1,3}' 	=> \@{$shell_commands{commandline}},
 		't|testmode'=> sub { $is_test_mode =  1 }, # 'normal' test-mode
-		'v|verbose'	=> sub { $is_test_mode = 20}, 	# verbose, show all infos
+		'v|verbose'	=> sub { $is_test_mode = 20}, 	# verbose == show all infos
 		'q|quiet'   => sub { $is_silent_mode = 1; say "(t) psst." if $is_test_mode; $is_test_mode = 0 }, # quiet, no messages 
 		'h|help|?' 	=> \$usage_exit,
 	) or 
 	$usage_exit = 1;
-	if ($usage_exit || ! $_script_metadata{configfile} ) {
-		$error_message = "Usage: $0 $VERSION [-g gEditor] [-e|ec] [-n id max 3] [-t|v|q] [-h] -c Konfiguration.xml \n";
+	if ($usage_exit || ! $script_metadata{configfile} ) {
+		$error_message = "Usage: $0 $VERSION [-g gEditor] [-e] [-n id max 3] [-t|v|q] [-h] -c Konfiguration.xml \n";
 		message_exit ($error_message , 02)
 	}
 }
 # Set the script configuration file if not already set
-#if ( !exists $_script_metadata{configfile} || $_script_metadata{configfile} eq '' ) {
-	#$error_message = "No XML file defined: '$_script_metadata{configfile}'";
+#if ( !exists $script_metadata{configfile} || $script_metadata{configfile} eq '' ) {
+	#$error_message = "No XML file defined: '$script_metadata{configfile}'";
 	#message_exit ($error_message , 255);# obsolete...
 #} else {
-	$string_map{xml_file_name} = $_script_metadata{configfile}; 
+	$string_map{xml_file_name} = $script_metadata{configfile}; 
 	if ($is_test_mode && ! $is_silent_mode ) {
-		print "(t) start with '$_script_metadata{configfile}'\n"
+		print "(t) start with '$script_metadata{configfile}'\n"
 	}
 #}
-
-#system ('zenity --notification  --height 400 --width 400 --window-icon="info" --text="messenger_top_text\ntxt" --timeout=50 ');
 
 #::: init doc for LibXML
 eval {
 	$dom = XML::LibXML->load_xml(
-							location => $_script_metadata{configfile}, 
+							location => $script_metadata{configfile}, 
 							no_blanks => 1*0 # <>0 heisst string ohne space \n etc.
 							); 
-	$_script_metadata{config_main_node} = $dom->documentElement->nodeName; 
+	$script_metadata{config_main_node} = $dom->documentElement->nodeName; 
 };
 if ($@) {
 	$error_message = "Failed to parse XML file: $@";
     message_exit ($error_message , 255);
-} else { # init window-titles
-	set_dialog_item ('titles' , uc($_script_metadata{script_name})." V".$VERSION , '' , '' );
+} else { 
+	set_dialog_item ('titles' , uc($script_metadata{script_name})." V".$VERSION , '' , '' );
 }
 
 #::: Start
-$error_message =  "Start reading '$_script_metadata{config_main_node}' from\n'$_script_metadata{configfile}'.";
-message_notification ($error_message , 1);
+$error_message =  "Parsing '$script_metadata{config_main_node}' from\n'$script_metadata{configfile}'.";
+message_notification ($error_message , -1);
 
 # Get general config values
 for my $tag_index (0..$#all_taglist) {
@@ -202,7 +199,7 @@ if ($list_taglist[4]) { # order of the tag to be executed
 # Get identifier from the list elements in config (keep '/')
 @list_id = get_xml_array_by_attribute ($dom , '/'.$config_elements{'list_label'} , 'id' ); 
 if (scalar(@list_id) == 0) {
-	$error_message = "The configuration file \n'$_script_metadata{configfile}'\n is missing data.";
+	$error_message = "The configuration file \n'$script_metadata{configfile}'\n is missing data.";
 	message_exit ($error_message , 44) 
 }
 
@@ -225,16 +222,18 @@ foreach my $item (@list_item_name) {
 
 # Check if the number of entries corresponds with id times id-elements (well filled / no lacks in config)
 my $count = ( $num_options - scalar @list_id * scalar @list_item_name );
-$error_message = "The configuration file \n'$_script_metadata{configfile}'\n is not well-filled with data or tags are empty.";
+$error_message = "The configuration file \n'$script_metadata{configfile}'\n is not well-filled with data or tags are empty.";
 message_test_exit ($count , $error_message , 46);
 
 # End of reading config
-$error_message = "Reading configuration file is done!";
-message_notification ($error_message , 1); # ???
+if ($is_test_mode > 0 ) {
+	$error_message = "Reading configuration file is done!";
+	message_notification ($error_message , 1); 
+}
 
 ## Init Dialogs with config-values 
 # Set elements for list-dialog
-	$config_elements{dialog_menue} .= "\n\t\t(processed with '$_script_metadata{script_name} $_script_metadata{version}')"; 
+	$config_elements{dialog_menue} .= "\n\t\t(processed with '$script_metadata{script_name} $script_metadata{version}')"; 
 set_dialog_item ( 'titles' , $config_elements{dialog_title}, $config_elements{dialog_menue}, $config_elements{dialog_column1}); 
 	my @list_column_name;  # take the xml-value, split into 3, then replace placeholder for splitting with ' '
 	@list_column_name = split(/\s+/, $config_elements{$dialog_taglist[3]}) if $dialog_taglist[3];
@@ -243,23 +242,23 @@ set_dialog_item ( 'columns' , @list_column_name );
 set_dialog_item ( 'window_size' , 350 , 500 , '' );
 
 # Set elements for the listed items (for checklist)
-add_items_from_config ( 0 , \@prog_taglist , \@{$_dialog_config{list}} );
-add_items_from_config ( 0 , \@config_taglist , \@{$_dialog_config{list}} );
+add_items_from_config ( 0 , \@prog_taglist , \@{$dialog_config{list}} );
+add_items_from_config ( 0 , \@config_taglist , \@{$dialog_config{list}} );
 foreach my $i (0 .. $#list_id) {
-	push @{$_dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_item_line[$list_id[$i]][0] );
+	push @{$dialog_config{list}}, add_list_item ( 0 , $list_id[$i] , $list_item_line[$list_id[$i]][0] );
 }
 
 # Check for double entries
-my @duplicates = find_array_duplicates (@{$_dialog_config{list}});
-$error_message = "The configuration file \n'$_script_metadata{configfile}'\n contains at least one wrong double identifier.";
+my @duplicates = find_array_duplicates (@{$dialog_config{list}});
+$error_message = "The configuration file \n'$script_metadata{configfile}'\n contains at least one wrong double identifier.";
 message_test_exit ( scalar (@duplicates) , $error_message ,  45);
 
 # Sort & define complet-list	
-@{$_dialog_config{list}} = sort_pairwise ( @{$_dialog_config{list}});;
-$_dialog_config{complete_list} = join (' ',  grep { ref($_) ne 'ARRAY' } @{$_dialog_config{list}} ); 
+@{$dialog_config{list}} = sort_pairwise ( @{$dialog_config{list}});;
+$dialog_config{complete_list} = join (' ',  grep { ref($_) ne 'ARRAY' } @{$dialog_config{list}} ); 
 # Checking items from command-line are given & defined
 foreach my $cmd_item ( @{$shell_commands{commandline}} ) {
-	if ( $_dialog_config{complete_list} !~ $cmd_item ) {
+	if ( $dialog_config{complete_list} !~ $cmd_item ) {
 		$error_message = "Error with commandline: Case '$cmd_item' not defined.";
 		message_exit ($error_message , 66) 
 	}
@@ -271,7 +270,7 @@ if ($shell_commands{extract_all}) {
 	$error_message = "Extraction done, program will finish.";
 	message_exit ($error_message , 0)
 } elsif (scalar @{$shell_commands{commandline}} == 0 ) { # ask-for-selection
-    eval { @{$shell_commands{selection}} = ask_to_choose (%_dialog_config) };
+    eval { @{$shell_commands{selection}} = ask_to_choose (%dialog_config) };
     if ($@) {
 		$error_message = "Error occurred: $@";
         message_exit ($error_message , 0)
@@ -295,7 +294,7 @@ foreach my $case (0 .. $limit) {
             $program_name .= $list_item_line[$selected_case][$schema_item];
         };
         push @{$shell_commands{execution_list}} , $program_name ;
-    } elsif ( $_dialog_config{complete_list} =~ /$selected_case/) { # idem for programs from xml-file
+    } elsif ( $dialog_config{complete_list} =~ /$selected_case/) { # idem for programs from xml-file
         push @{$shell_commands{execution_list}} , extract_progname ($selected_case , '_program' , '_id', @prog_taglist);
         push @{$shell_commands{execution_list}} , extract_progname ($selected_case , '_program' , '_id', @config_taglist)
     } else {
@@ -310,7 +309,7 @@ if ( $is_test_mode > 0 ) {
 }
 
 # EXEC
-if (@{$shell_commands{execution_list}} &&  1 == 2 ) {
+if (@{$shell_commands{execution_list}}  ) { #&&  1 == 2
     for my $cmd_to_execute (@{$shell_commands{execution_list}}) {
         my $pid = fork();
         if ($pid == 0) {
@@ -335,23 +334,6 @@ if ( $is_test_mode > 10 ) {
 }
 
 #::: subs ::::::::::::::::::::::#
-sub nothimng { };
-#::#
-
-# Checking for no double-ids in the list
-sub find_array_duplicates {
-	my @array = @_;
-	my %count;
-	my @dupl;
-
-	for my $j (@array) {
-		if (ref($j) ne 'ARRAY') {
-			$count{$j}++;
-			push @dupl, $j if $count{$j} > 1;
-		}
-	}
-	return @dupl;
-}
 
 # Replace in string substr using global hash string_map
 # working-strg is the string to be changed
@@ -516,8 +498,8 @@ sub extract_progname { # mit Umstellung auf oo vielelicht weg
 
 # for debugging
 sub show_all_items {
-# use Dmper ??? in final version
-	say "\nEingelesene Daten\n\t'$_script_metadata{configfile}'";
+use Data::Dumper; # in final version
+	say "\nEingelesene Daten\n\t'$script_metadata{configfile}'";
 	
 	say "\n\tALL DEFAULT tags";
 	for my $run (0..$#all_taglist) { 
@@ -539,12 +521,12 @@ sub show_all_items {
 	print Dumper %string_map;
 
 	say "\nCONFIG\n\tMETAs";
-	print Dumper %_script_metadata;
+	print Dumper %script_metadata;
 	say "#\n\tELEMENTS";
 	print Dumper %config_elements;
 	
 	say "##\n\tDIALOG configs";
-	print Dumper %_dialog_config;
+	print Dumper %dialog_config;
 	
 	say "###\n\tSHELL CMDS";
 	print Dumper %shell_commands;

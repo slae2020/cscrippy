@@ -6,19 +6,20 @@ use warnings;
 use Exporter;
 use Cwd qw( abs_path );
 use File::Spec;
-use lib "/home/stefan/prog/bakki/cscrippy/"; # wg. /Uupm... ???
+use lib "/home/stefan/prog/bakki/cscrippy/"; 
 use Uupm::Dialog;
 
 $VERSION = 'Checker.pm 0.2'; # 2024.09.30
 
 BEGIN {
-	our @ISA = qw (Exporter);
-our @EXPORT = qw ( 
-		ensure_program_available
-		ensure_file_existence
-		
-		check_variable 
-		);
+    our @ISA = qw (Exporter);
+our @EXPORT = qw (
+        ensure_program_available
+        ensure_file_existence
+
+        check_variable
+        find_array_duplicates
+        );
 }
 
 #:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -30,7 +31,7 @@ our @EXPORT = qw (
 #::: declarations ::::::::::::::#
 
 # Eher Konstant für check ???
-my $dir_usb = "media/"; 
+my $dir_usb = "media/";
 my $dir_mnt = "mnt/";
 
 #::: main ::::::::::::::::::::::#
@@ -90,14 +91,14 @@ sub ensure_mount {
     return 1;
 }
 
-# Function to ensure availibility of a program 
+# Function to ensure availibility of a program
 # only first srtg when splitter definedd
-# else fullstring 
+# else fullstring
 sub ensure_program_available {
     my ($prog_name , $splitter) = @_;
     $splitter ||= 'Klsos'; # some ramdon word if undef
-    my @program_parts = split($splitter, $prog_name); 
-   
+    my @program_parts = split($splitter, $prog_name);
+
     if (system("command -v '$program_parts[0]' > /dev/null 2>&1") != 0) {
         message_exit ("Config-Error: program '$program_parts[0]' not found.\n", 24);
     }
@@ -128,56 +129,42 @@ sub check_variable {
 
     # Determine the type of the variable
     my $type = ref($var);
-    
+
     if ($type eq '') {
         # The variable is a string (or a scalar)
         return "The variable is a string.";
-    } 
+    }
     elsif ($type eq 'ARRAY') {
         # The variable is an array reference
         return "The variable is an array.";
-    } 
+    }
     elsif ($type eq 'HASH') {
         # The variable is a hash reference
         return "The variable is a hash.";
-    } 
+    }
     else {
         return "The variable is of type: $type.";
     }
+}
+
+# Checking for no double-ids in the list
+sub find_array_duplicates {
+    my @array = @_;
+    my %count;
+    my @dupl;
+
+    for my $j (@array) {
+        if (ref($j) ne 'ARRAY') {
+            $count{$j}++;
+            push @dupl, $j if $count{$j} > 1;
+        }
+    }
+    return @dupl;
 }
 
 1;
 
 __END__
-
-transfer ????
-sub check_variable {
-    my $var = shift;
-
-    # Check if the variable is defined
-    if (!defined $var) {
-        return "The variable is not defined.";
-    }
-
-    # Determine the type of the variable
-    my $type = ref($var);
-    
-    if ($type eq '') {
-        # The variable is a string (or a scalar)
-        return "The variable is a string.";
-    } 
-    elsif ($type eq 'ARRAY') {
-        # The variable is an array reference
-        return "The variable is an array.";
-    } 
-    elsif ($type eq 'HASH') {
-        # The variable is a hash reference
-        return "The variable is a hash.";
-    } 
-    else {
-        return "The variable is of type: $type.";
-    }
-}
 
 # Example usage
 my $string = "Hello, World!";
@@ -202,7 +189,7 @@ $answer = ensure_file_existence ("README.md");
 printf $answer;
 
 * **`ensure_mount`:** The script assumes the `mounter.sh` script is available at the specified location (`$ENV{HOME}/prog/bakki/mounti/mounter.sh`).
-#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); ??? austasuschen
+#@{$dialog_config{titles}} = set_dialog_item ('Program DoIt', 'Choose your items'); 
 #push @{$dialog_config{list}}, add_list_item (0,'03','no choice');
 #printf "$Uupm::Dialog::is_cancel<->$Uupm::Dialog::VERSION ";
 
